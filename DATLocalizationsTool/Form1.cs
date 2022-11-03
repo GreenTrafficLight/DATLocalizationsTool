@@ -24,9 +24,11 @@ namespace DATLocalizationsTool
         };
 
         DAT dat;
-        List<string> ListString;
+        CMN cmn;
         
+        List<string> ListString;
 
+        CMN.CmnTreeNode CmnRoot;
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
@@ -50,6 +52,11 @@ namespace DATLocalizationsTool
                         dat = new DAT(filepath);
                         AddToDataGridView();
                     }
+                    else if (Path.GetFileNameWithoutExtension(filepath) == "Cmn")
+                    {
+                        cmn = new CMN(filepath);
+                        AddToTreeView();
+                    }
                 }
 
             }
@@ -72,9 +79,31 @@ namespace DATLocalizationsTool
             }
             dataGridView1.AutoResizeRows();
         }
+        private void AddToTreeView()
+        {
+            CmnRoot = cmn.root;
+
+            AddCmnTreeNode(CmnRoot);
+
+            Console.WriteLine("Done");
+        }
+
+        private void AddCmnTreeNode(CMN.CmnTreeNode cmnTreeNode)
+        {
+            if (cmnTreeNode == null)
+                return;
+
+            //treeView1.Nodes.Add(cmnTreeNode.name);
+
+            foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
+                AddCmnTreeNode(children);
+        }
 
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex == -1)
+                return;
+
             if (dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value != null && !dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].ReadOnly)
             {
                 string cellText = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
