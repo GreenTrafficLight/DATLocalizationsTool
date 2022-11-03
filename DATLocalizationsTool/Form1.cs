@@ -14,33 +14,18 @@ namespace DATLocalizationsTool
 {
     public partial class Form1 : Form
     {
-        public Form1()
-        {
-            InitializeComponent();
-        }
 
         private List<string> ValidStrings = new List<string> {
             "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "Cmn"
         };
 
-        DAT dat;
-        CMN cmn;
-        
-        List<string> ListString;
-
-        CMN.CmnTreeNode CmnRoot;
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        List<DAT> Dats = new List<DAT>();
+        DAT dat = null;
+        CMN cmn = null;
+        public Form1()
         {
-            using (OpenFileDialog ofd = new OpenFileDialog())
-            {
-                ofd.Filter = "Dat file|*.dat";
-                ofd.Title = "Open dat file";
-
-                if (ofd.ShowDialog() == DialogResult.OK)
-                    LoadFile(ofd.FileName);
-            }
+            InitializeComponent();
         }
-
         private void LoadFile(string filepath)
         {
             try
@@ -49,12 +34,15 @@ namespace DATLocalizationsTool
                 {
                     if (Path.GetFileNameWithoutExtension(filepath) != "Cmn")
                     {
-                        dat = new DAT(filepath);
-                        AddToDataGridView();
+                        dat = new DAT();
+                        dat.Read(filepath);
+                        comboBox1.Items.Add(Path.GetFileNameWithoutExtension(filepath));
+                        Dats.Add(dat);
                     }
                     else if (Path.GetFileNameWithoutExtension(filepath) == "Cmn")
                     {
-                        cmn = new CMN(filepath);
+                        cmn = new CMN();
+                        cmn.Read(filepath);
                         AddToTreeView();
                     }
                 }
@@ -68,35 +56,63 @@ namespace DATLocalizationsTool
 
         private void AddToDataGridView()
         {
-            ListString = dat.Strings;
-
-            int index = 0;
-            foreach (string s in ListString)
+            if (comboBox1.SelectedIndex != -1 && cmn == null)
             {
-                dataGridView1.Rows.Add(index, null, s);
-
-                index++;
+                int index = 0;
+                foreach (string s in Dats[comboBox1.SelectedIndex].Strings)
+                {
+                    dataGridView1.Rows.Add(index, null, s);
+                    index++;
+                }
+                dataGridView1.AutoResizeRows();
             }
-            dataGridView1.AutoResizeRows();
+            else if (comboBox1.SelectedIndex != -1)
+            {
+                if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
+                {
+                    if (cmnTreeNode.StringNumber != -1)
+                    {
+                        string text = Dats[comboBox1.SelectedIndex].Strings[cmnTreeNode.StringNumber];
+                        dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
+                    }
+                    else if (cmnTreeNode.StringNumber == -1)
+                    {
+                        AddCmnTreeNodeToDataGridView(cmnTreeNode);
+                    }
+                }
+            }
         }
+        
         private void AddToTreeView()
         {
-            CmnRoot = cmn.root;
-
-            AddCmnTreeNode(CmnRoot);
-
-            Console.WriteLine("Done");
+            foreach (CMN.CmnTreeNode children in cmn.root.childrens)
+                AddCmnTreeNodeToTreeView(children, null);
         }
 
-        private void AddCmnTreeNode(CMN.CmnTreeNode cmnTreeNode)
+        private void AddCmnTreeNodeToTreeView(CMN.CmnTreeNode cmnTreeNode, CMN.CmnTreeNode cmnTreeNodeParent)
         {
             if (cmnTreeNode == null)
                 return;
 
-            //treeView1.Nodes.Add(cmnTreeNode.name);
+            if (cmnTreeNodeParent == null)
+                treeView1.Nodes.Add(cmnTreeNode);
+            else
+                cmnTreeNodeParent.Nodes.Add(cmnTreeNode);
 
             foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
-                AddCmnTreeNode(children);
+                AddCmnTreeNodeToTreeView(children, cmnTreeNode);
+        }
+
+        private void AddCmnTreeNodeToDataGridView(CMN.CmnTreeNode cmnTreeNode)
+        {
+            if (cmnTreeNode.StringNumber != -1)
+            {
+                string text = Dats[comboBox1.SelectedIndex].Strings[cmnTreeNode.StringNumber];
+                dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
+            }
+
+            foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
+                AddCmnTreeNodeToDataGridView(children);
         }
 
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -107,9 +123,48 @@ namespace DATLocalizationsTool
             if (dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value != null && !dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].ReadOnly)
             {
                 string cellText = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
-                var textForm = new TextForm(cellText);
+                var textForm = new TextForm(cellText, e.RowIndex, e.ColumnIndex);
                 textForm.Show();
+                
             }
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "Dat file|*.dat";
+                ofd.Title = "Open dat file";
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                    LoadFile(ofd.FileName);
+            }
+        }
+
+        private void openDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+            {
+                if (fbd.ShowDialog() == DialogResult.OK && !string.IsNullOrEmpty(fbd.SelectedPath))
+                {
+                    string[] files = Directory.GetFiles(fbd.SelectedPath);
+
+                    foreach (string file in files)
+                        LoadFile(file);
+                }
+            }
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            dataGridView1.Rows.Clear();
+            AddToDataGridView();
+        }
+
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            dataGridView1.Rows.Clear();
+            AddToDataGridView();
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 using DATLocalizationsTool.Commons;
 
@@ -11,21 +12,20 @@ namespace DATLocalizationsTool.Formats
 {
     public class CMN
     {
-        public class CmnTreeNode
+        public class CmnTreeNode : TreeNode
         {
-            public string name;
-            public int stringNumber;
+            public int StringNumber = -1;
             public List<CmnTreeNode> childrens = new List<CmnTreeNode>();
 
-            public CmnTreeNode()
+            public CmnTreeNode(string name, int stringNumber)
             {
-                this.name = "";
-                this.stringNumber = -1;
+                Text = name;
+                StringNumber = stringNumber;
             }
         }
 
-        public CmnTreeNode root = new CmnTreeNode();
-        public CMN(string filepath)
+        public CmnTreeNode root = new CmnTreeNode("", -1);
+        public void Read(string filepath)
         {
             byte[] data = File.ReadAllBytes(filepath);
 
@@ -37,17 +37,18 @@ namespace DATLocalizationsTool.Formats
             root = ReadVariables(br, root);
         }
 
-        public CmnTreeNode ReadVariables(DATBinaryReader br, CmnTreeNode parent)
+        private CmnTreeNode ReadVariables(DATBinaryReader br, CmnTreeNode parent)
         {
 
             int count = br.ReadInt();
             for (int i = 0; i < count; i++)
             {
-                CmnTreeNode node = new CmnTreeNode();
+                
                 int nameLength = br.ReadInt();
-                node.name = parent.name + br.ReadString(nameLength);
-                node.stringNumber = br.ReadInt();
-                Console.WriteLine(node.name);
+                string name = parent.Text + br.ReadString(nameLength);
+                int stringNumber = br.ReadInt();
+                //Console.WriteLine(node.Text);
+                CmnTreeNode node = new CmnTreeNode(name, stringNumber);
                 parent.childrens.Add(ReadVariables(br, node));
             }
             return parent;

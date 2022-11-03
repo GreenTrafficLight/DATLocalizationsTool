@@ -15,27 +15,10 @@ namespace DATLocalizationsTool.Formats
     {
         public List<string> Strings;
 
-        public DAT(string filepath)
+        public DAT()
         {
             Strings = new List<string>();
-            byte[] data = File.ReadAllBytes(filepath);
-            
-            uint size = (uint)data.Length + Path.GetFileNameWithoutExtension(filepath)[0] - 65;
-            data = Crypt(data, size);
-            data = DATCompression.Decompress(data);
 
-            DATBinaryReader br = new DATBinaryReader(data);
-
-            ReadStrings(br);
-
-            /*
-            data = Compress(data);
-            size = (uint)data.Length + Path.GetFileNameWithoutExtension(filepath)[0] - 65;
-            data = Crypt(data, size);
-            */
-
-
-            Console.WriteLine("test");
         }
         public static byte[] Crypt(byte[] data, uint size)
         {
@@ -66,6 +49,27 @@ namespace DATLocalizationsTool.Formats
             return data;
         }
     
+        public void Read(string filepath)
+        {
+            byte[] data = File.ReadAllBytes(filepath);
+
+            uint size = (uint)data.Length + Path.GetFileNameWithoutExtension(filepath)[0] - 65;
+            data = Crypt(data, size);
+            data = DATCompression.Decompress(data);
+
+            DATBinaryReader br = new DATBinaryReader(data);
+
+            ReadStrings(br);
+        }
+
+        public void Write(string filepath)
+        {
+            byte[] data = File.ReadAllBytes(filepath);
+
+            data = DATCompression.Compress(data);
+            uint size = (uint)data.Length + Path.GetFileNameWithoutExtension(filepath)[0] - 65;
+            data = Crypt(data, size);
+        }
         private void ReadStrings(DATBinaryReader reader)
         {
             while (reader.Position < reader.Length)

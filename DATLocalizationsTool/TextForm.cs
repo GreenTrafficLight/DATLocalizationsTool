@@ -12,11 +12,15 @@ namespace DATLocalizationsTool
 {
     public partial class TextForm : Form
     {
-        public string text;
-        public TextForm(string text)
+        public int RowIndex = -1;
+        public int ColumnIndex = -1;
+        public TextForm(string text, int rowIndex, int columnIndex)
         {
             InitializeComponent();
             textBox1.Text = text;
+            RowIndex = rowIndex;
+            ColumnIndex = columnIndex;
+            textBox1.ScrollBars = ScrollBars.Vertical;
         }
     }
 }
