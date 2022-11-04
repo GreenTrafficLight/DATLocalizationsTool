@@ -21,6 +21,7 @@ namespace DATLocalizationsTool.Formats
             public CmnTreeNode(string nodeText, string name, int stringNumber)
             {
                 Text = nodeText;
+                Name = nodeText;
                 VariableName = name;
                 StringNumber = stringNumber;
             }
@@ -45,6 +46,14 @@ namespace DATLocalizationsTool.Formats
             bw.WriteInt(root.childrens.Count);
             foreach(CmnTreeNode children in root.childrens)
                 WriteVariables(bw, children);
+
+            byte[] data = bw.DATBinaryWriterData.ToArray();
+
+            data = DATCompression.Compress(data);
+            uint size = (uint)data.Length;
+            data = DAT.Crypt(data, size);
+
+            File.WriteAllBytes(filepath, data);
         }
 
         private CmnTreeNode ReadVariables(DATBinaryReader br, CmnTreeNode parent)

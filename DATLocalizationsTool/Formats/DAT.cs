@@ -73,6 +73,8 @@ namespace DATLocalizationsTool.Formats
             data = DATCompression.Compress(data);
             uint size = (uint)data.Length + Path.GetFileNameWithoutExtension(filepath)[0] - 65;
             data = Crypt(data, size);
+
+            File.WriteAllBytes(filepath, data);
         }
         private void ReadStrings(DATBinaryReader reader)
         {

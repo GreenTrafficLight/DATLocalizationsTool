@@ -32,12 +32,13 @@ namespace DATLocalizationsTool
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.DesignNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DesignID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DesignText = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.treeView1 = new System.Windows.Forms.TreeView();
-            this.openDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -57,7 +58,8 @@ namespace DATLocalizationsTool
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
-            this.openDirectoryToolStripMenuItem});
+            this.openDirectoryToolStripMenuItem,
+            this.saveToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -68,6 +70,20 @@ namespace DATLocalizationsTool
             this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // openDirectoryToolStripMenuItem
+            // 
+            this.openDirectoryToolStripMenuItem.Name = "openDirectoryToolStripMenuItem";
+            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openDirectoryToolStripMenuItem.Text = "Open Directory";
+            this.openDirectoryToolStripMenuItem.Click += new System.EventHandler(this.openDirectoryToolStripMenuItem_Click);
+            // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Text = "Save";
+            this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // dataGridView1
             // 
@@ -101,6 +117,7 @@ namespace DATLocalizationsTool
             this.DesignID.FillWeight = 102.9209F;
             this.DesignID.HeaderText = "ID";
             this.DesignID.Name = "DesignID";
+            this.DesignID.ReadOnly = true;
             this.DesignID.Width = 184;
             // 
             // DesignText
@@ -108,6 +125,7 @@ namespace DATLocalizationsTool
             this.DesignText.FillWeight = 141.2132F;
             this.DesignText.HeaderText = "Text";
             this.DesignText.Name = "DesignText";
+            this.DesignText.ReadOnly = true;
             this.DesignText.Width = 253;
             // 
             // treeView1
@@ -118,14 +136,9 @@ namespace DATLocalizationsTool
             this.treeView1.Name = "treeView1";
             this.treeView1.Size = new System.Drawing.Size(337, 411);
             this.treeView1.TabIndex = 1;
+            this.treeView1.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.treeView1_AfterLabelEdit);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
-            // 
-            // openDirectoryToolStripMenuItem
-            // 
-            this.openDirectoryToolStripMenuItem.Name = "openDirectoryToolStripMenuItem";
-            this.openDirectoryToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.openDirectoryToolStripMenuItem.Text = "Open Directory";
-            this.openDirectoryToolStripMenuItem.Click += new System.EventHandler(this.openDirectoryToolStripMenuItem_Click);
+            this.treeView1.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView1_NodeMouseClick);
             // 
             // comboBox1
             // 
@@ -163,12 +176,13 @@ namespace DATLocalizationsTool
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn DesignNumber;
-        private System.Windows.Forms.DataGridViewTextBoxColumn DesignID;
-        private System.Windows.Forms.DataGridViewTextBoxColumn DesignText;
         private System.Windows.Forms.TreeView treeView1;
         private System.Windows.Forms.ToolStripMenuItem openDirectoryToolStripMenuItem;
         private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn DesignNumber;
+        private System.Windows.Forms.DataGridViewTextBoxColumn DesignID;
+        private System.Windows.Forms.DataGridViewTextBoxColumn DesignText;
+        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
     }
 }
 
