@@ -47,7 +47,6 @@ namespace DATLocalizationsTool.Formats
                 int nameLength = br.ReadInt();
                 string name = parent.Text + br.ReadString(nameLength);
                 int stringNumber = br.ReadInt();
-                //Console.WriteLine(node.Text);
                 CmnTreeNode node = new CmnTreeNode(name, stringNumber);
                 parent.childrens.Add(ReadVariables(br, node));
             }

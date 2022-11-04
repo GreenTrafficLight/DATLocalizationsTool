@@ -38,6 +38,7 @@ namespace DATLocalizationsTool
                         dat.Read(filepath);
                         comboBox1.Items.Add(Path.GetFileNameWithoutExtension(filepath));
                         Dats.Add(dat);
+                        //dat.Write(filepath);
                     }
                     else if (Path.GetFileNameWithoutExtension(filepath) == "Cmn")
                     {
@@ -70,15 +71,7 @@ namespace DATLocalizationsTool
             {
                 if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
                 {
-                    if (cmnTreeNode.StringNumber != -1)
-                    {
-                        string text = Dats[comboBox1.SelectedIndex].Strings[cmnTreeNode.StringNumber];
-                        dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
-                    }
-                    else if (cmnTreeNode.StringNumber == -1)
-                    {
                         AddCmnTreeNodeToDataGridView(cmnTreeNode);
-                    }
                 }
             }
         }

@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commons\DATBinaryReader.cs" />
+    <Compile Include="Commons\DATBinaryWriter.cs" />
     <Compile Include="Commons\DATCompression.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

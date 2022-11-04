@@ -64,16 +64,34 @@ namespace DATLocalizationsTool.Formats
 
         public void Write(string filepath)
         {
-            byte[] data = File.ReadAllBytes(filepath);
+            DATBinaryWriter bw = new DATBinaryWriter();
 
-            data = DATCompression.Compress(data);
+            WriteStrings(bw);
+
+            byte[] data = bw.DATBinaryWriterData.ToArray();
+
+            string test = Path.GetFullPath(filepath) + "_test";
+
+            /*data = DATCompression.Compress(data);
             uint size = (uint)data.Length + Path.GetFileNameWithoutExtension(filepath)[0] - 65;
-            data = Crypt(data, size);
+            data = Crypt(data, size);*/
         }
         private void ReadStrings(DATBinaryReader reader)
         {
             while (reader.Position < reader.Length)
                 Strings.Add(reader.ReadString());
+        }
+
+        private void WriteStrings(DATBinaryWriter writer)
+        {
+            int index = 0;
+            foreach (string s in Strings)
+            {
+                Console.WriteLine(index);
+                writer.WriteString(s);
+                index++;
+            }
+                
         }
     }
 }
