@@ -14,17 +14,19 @@ namespace DATLocalizationsTool.Formats
     {
         public class CmnTreeNode : TreeNode
         {
+            public string VariableName = "";
             public int StringNumber = -1;
             public List<CmnTreeNode> childrens = new List<CmnTreeNode>();
 
-            public CmnTreeNode(string name, int stringNumber)
+            public CmnTreeNode(string nodeText, string name, int stringNumber)
             {
-                Text = name;
+                Text = nodeText;
+                VariableName = name;
                 StringNumber = stringNumber;
             }
         }
 
-        public CmnTreeNode root = new CmnTreeNode("", -1);
+        public CmnTreeNode root = new CmnTreeNode("", "", -1);
         public void Read(string filepath)
         {
             byte[] data = File.ReadAllBytes(filepath);
@@ -36,6 +38,14 @@ namespace DATLocalizationsTool.Formats
 
             root = ReadVariables(br, root);
         }
+        public void Write(string filepath)
+        {
+            DATBinaryWriter bw = new DATBinaryWriter();
+
+            bw.WriteInt(root.childrens.Count);
+            foreach(CmnTreeNode children in root.childrens)
+                WriteVariables(bw, children);
+        }
 
         private CmnTreeNode ReadVariables(DATBinaryReader br, CmnTreeNode parent)
         {
@@ -45,12 +55,22 @@ namespace DATLocalizationsTool.Formats
             {
                 
                 int nameLength = br.ReadInt();
-                string name = parent.Text + br.ReadString(nameLength);
+                string name = br.ReadString(nameLength);
                 int stringNumber = br.ReadInt();
-                CmnTreeNode node = new CmnTreeNode(name, stringNumber);
+                CmnTreeNode node = new CmnTreeNode(parent.Text + name, name, stringNumber);
                 parent.childrens.Add(ReadVariables(br, node));
             }
             return parent;
+        }
+
+        private void WriteVariables(DATBinaryWriter bw, CmnTreeNode node)
+        {
+            bw.WriteInt(node.VariableName.Length);
+            bw.WriteString(node.VariableName);
+            bw.WriteInt(node.StringNumber);
+            bw.WriteInt(node.childrens.Count);
+            foreach (CmnTreeNode children in node.childrens)
+                WriteVariables(bw, children);
         }
     }
 }

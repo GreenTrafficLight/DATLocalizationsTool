@@ -12,6 +12,11 @@ namespace DATLocalizationsTool
 {
     public partial class TextForm : Form
     {
+        public string DatText
+        {
+            get { return textBox1.Text; }
+            set { textBox1.Text = value.ToString(); }
+        }
         public int RowIndex = -1;
         public int ColumnIndex = -1;
         public TextForm(string text, int rowIndex, int columnIndex)

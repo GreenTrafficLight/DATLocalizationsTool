@@ -45,6 +45,7 @@ namespace DATLocalizationsTool
                         cmn = new CMN();
                         cmn.Read(filepath);
                         AddToTreeView();
+                        cmn.Write(filepath);
                     }
                 }
 
@@ -116,9 +117,11 @@ namespace DATLocalizationsTool
             if (dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value != null && !dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].ReadOnly)
             {
                 string cellText = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
-                var textForm = new TextForm(cellText, e.RowIndex, e.ColumnIndex);
-                textForm.Show();
-                
+                using (var textForm = new TextForm(cellText, e.RowIndex, e.ColumnIndex)) 
+                {
+                    if (textForm.ShowDialog() == DialogResult.Cancel)
+                        dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = textForm.DatText;
+                }
             }
         }
 

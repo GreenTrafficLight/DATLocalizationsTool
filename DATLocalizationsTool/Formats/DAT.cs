@@ -70,11 +70,9 @@ namespace DATLocalizationsTool.Formats
 
             byte[] data = bw.DATBinaryWriterData.ToArray();
 
-            string test = Path.GetFullPath(filepath) + "_test";
-
-            /*data = DATCompression.Compress(data);
+            data = DATCompression.Compress(data);
             uint size = (uint)data.Length + Path.GetFileNameWithoutExtension(filepath)[0] - 65;
-            data = Crypt(data, size);*/
+            data = Crypt(data, size);
         }
         private void ReadStrings(DATBinaryReader reader)
         {
@@ -84,14 +82,8 @@ namespace DATLocalizationsTool.Formats
 
         private void WriteStrings(DATBinaryWriter writer)
         {
-            int index = 0;
             foreach (string s in Strings)
-            {
-                Console.WriteLine(index);
                 writer.WriteString(s);
-                index++;
-            }
-                
         }
     }
 }

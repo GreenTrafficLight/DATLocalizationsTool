@@ -18,36 +18,21 @@ namespace DATLocalizationsTool.Commons
             Position++;
             Length++;
         }
-
-        public void WriteByte(sbyte value)
+        public void WriteInt(int value)
         {
-            DATBinaryWriterData.Add((byte)value);
-            Position++;
-            Length++;
-        }
-
-        public void WriteInt()
-        {
-            Position += 4;
-            Length += 4;
-        }
-
-        public void WriteUInt()
-        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            DATBinaryWriterData.AddRange(bytes);
             Position += 4;
             Length += 4;
         }
         public void WriteString(string value)
         {
-            //int length = Encoding.Unicode.GetByteCount(value);
+            byte[] stringData = Encoding.UTF8.GetBytes(value);
 
-            //Console.WriteLine(length);
-            /*for (int i = 0; i < value.Length; i++)
-            {
-                DATBinaryWriterData.Add((byte)value[i]);
-            }
-            Position += value.Length;
-            Length += value.Length;*/
+            DATBinaryWriterData.AddRange(stringData);
+
+            Position += stringData.Length;
+            Length += stringData.Length;
         }
     }
 }
