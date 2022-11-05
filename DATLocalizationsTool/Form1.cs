@@ -41,7 +41,6 @@ namespace DATLocalizationsTool
                         dat.Read(filepath);
                         comboBox1.Items.Add(Path.GetFileNameWithoutExtension(filepath));
                         Dats.Add(new Tuple<DAT, string>(dat, Path.GetFileNameWithoutExtension(filepath)));
-                        //dat.Write(filepath);
                     }
                     // Load Cmn.dat
                     else if (Path.GetFileNameWithoutExtension(filepath) == "Cmn")
@@ -51,9 +50,12 @@ namespace DATLocalizationsTool
                             Cmn = new CMN();
                             Cmn.Read(filepath);
                             AddToTreeView();
-                            //cmn.Write(filepath);
                         }
                     }
+                }
+                else
+                {
+                    MessageBox.Show(".dat name has been modified`.\nIt should keep the original name", "Modified .dat name Error");
                 }
 
             }
@@ -166,8 +168,8 @@ namespace DATLocalizationsTool
                 {
                     if (textForm.ShowDialog() == DialogResult.Cancel)
                     {
-                        dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = textForm.DatText;
-                        Dats[comboBox1.SelectedIndex].Item1.Strings[stringNumber] = textForm.DatText;
+                        dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = textForm.DatText + "\0";
+                        Dats[comboBox1.SelectedIndex].Item1.Strings[stringNumber] = textForm.DatText + "\0";
                     }
                 }
             }
@@ -179,8 +181,8 @@ namespace DATLocalizationsTool
                 {
                     if (textForm.ShowDialog() == DialogResult.Cancel)
                     {
-                        dataGridView1.Rows.Add(stringNumber, null, textForm.DatText);
-                        Dats[comboBox1.SelectedIndex].Item1.Strings.Add(textForm.DatText);
+                        dataGridView1.Rows.Add(stringNumber, null, textForm.DatText + "\0");
+                        Dats[comboBox1.SelectedIndex].Item1.Strings.Add(textForm.DatText + "\0");
                         // Add string to other Dats
                         for (int i = 0; i < comboBox1.Items.Count; i++)
                         {
@@ -209,6 +211,7 @@ namespace DATLocalizationsTool
         {
             SaveFile(FilePath);
         }
+        
         private void openDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (FolderBrowserDialog fbd = new FolderBrowserDialog())
@@ -273,7 +276,11 @@ namespace DATLocalizationsTool
                 // Update cmnTreeNodeName when editing is finished
                 e.Node.EndEdit(false);
                 CMN.CmnTreeNode cmnTreeNode = (CMN.CmnTreeNode)e.Node;
+                int lengthToRemove = cmnTreeNode.Text.Length;
                 cmnTreeNode.Text = e.Label;
+                cmnTreeNode.Name = e.Label;
+                cmnTreeNode.VariableName = cmnTreeNode.Text.Remove(0, lengthToRemove);
+
 
                 // Refresh DataGridView with updated cmnTreeNode name
                 dataGridView1.Rows.Clear();
@@ -284,7 +291,7 @@ namespace DATLocalizationsTool
                 e.CancelEdit = true;
                 MessageBox.Show("Invalid tree node label.\nThe label cannot be blank",
                    "Node Label Edit");
-                e.Node.BeginEdit();
+                // TO DO : Delete Node ( maybe ? )
             }
         }
 
