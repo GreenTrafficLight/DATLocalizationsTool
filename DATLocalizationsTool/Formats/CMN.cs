@@ -74,8 +74,8 @@ namespace DATLocalizationsTool.Formats
 
         private void WriteVariables(DATBinaryWriter bw, CmnTreeNode node)
         {
-            if (node.Text == "AircraftSkin_Description_zoef_0")
-                Console.WriteLine("test");
+            //if (node.Text == "AircraftSkin_Description_zoef_0")
+                //Console.WriteLine("test");
 
             bw.WriteInt(node.VariableName.Length);
             bw.WriteString(node.VariableName);

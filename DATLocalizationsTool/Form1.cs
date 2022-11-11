@@ -12,6 +12,12 @@ using System.IO;
 
 namespace DATLocalizationsTool
 {
+    /*
+     * Add empty string for dats that aren't loaded if a dat has more strings
+     * Fix the rename option
+     * Add "modify other dats" option to TextForm
+     * Add unsaved changes message box for TextForm
+     */
     public partial class Form1 : Form
     {
 
@@ -25,7 +31,10 @@ namespace DATLocalizationsTool
         public Form1()
         {
             InitializeComponent();
+
+            dataGridView1.Sort(dataGridView1.Columns[0], ListSortDirection.Ascending);
         }
+        
         private void LoadFile(string filepath)
         {
             try
@@ -34,23 +43,17 @@ namespace DATLocalizationsTool
                 {
                     FilePath = Path.GetDirectoryName(filepath);
 
+                    string fileName = Path.GetFileNameWithoutExtension(filepath);
+
                     // Load letter .dat
-                    if (Path.GetFileNameWithoutExtension(filepath) != "Cmn")
+                    if (fileName != "Cmn")
                     {
-                        DAT dat = new DAT();
-                        dat.Read(filepath);
-                        comboBox1.Items.Add(Path.GetFileNameWithoutExtension(filepath));
-                        Dats.Add(new Tuple<DAT, string>(dat, Path.GetFileNameWithoutExtension(filepath)));
+                        LoadDat(filepath);
                     }
                     // Load Cmn.dat
-                    else if (Path.GetFileNameWithoutExtension(filepath) == "Cmn")
+                    else if (fileName == "Cmn")
                     {
-                        if (Cmn == null)
-                        {
-                            Cmn = new CMN();
-                            Cmn.Read(filepath);
-                            AddToTreeView();
-                        }
+                        LoadCmn(filepath);
                     }
                 }
                 else
@@ -64,7 +67,40 @@ namespace DATLocalizationsTool
 
             }
         }
+        
+        private void LoadDat(string filepath)
+        {
+            DAT dat = new DAT();
+            dat.Read(filepath);
 
+            string fileName = Path.GetFileNameWithoutExtension(filepath);
+
+            // Check if .dat is already loaded
+            int index = Dats.FindIndex(d => d.Item2 == fileName);
+            if (index == -1)
+            {
+                // Add to comboBox if it isn't loaded
+                comboBox1.Items.Add(fileName);
+                Dats.Add(new Tuple<DAT, string>(dat, fileName));
+            }
+            else
+            {
+                // Replace the .dat loaded in the comboBox
+                comboBox1.Items[index] = fileName;
+                Dats[index] = new Tuple<DAT, string>(dat, fileName);
+            }
+        }
+        
+        private void LoadCmn(string filepath)
+        {
+            if (Cmn == null)
+            {
+                Cmn = new CMN();
+                Cmn.Read(filepath);
+                AddToTreeView();
+            }
+        }
+        
         private void SaveFile(string filepath)
         {
             if (!string.IsNullOrEmpty(filepath))
@@ -92,6 +128,23 @@ namespace DATLocalizationsTool
             }
         }
         
+        private void SearchTreeView(string searchString, TreeNodeCollection nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                if (node.Text.ToLower().Contains(searchString.ToLower()))
+                {
+                    treeView1.SelectedNode = node;
+                    break;
+                }
+
+                if (node.Nodes.Count > 0)
+                {
+                    SearchTreeView(searchString, node.Nodes);
+                }
+            }
+        }
+
         #region dataGridView
         private void AddToDataGridView()
         {
@@ -112,6 +165,7 @@ namespace DATLocalizationsTool
                 if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
                 {
                     AddCmnTreeNodeToDataGridView(cmnTreeNode);
+                    dataGridView1.Sort(dataGridView1.Columns[0], ListSortDirection.Ascending);
                 }
             }
         }
@@ -126,6 +180,19 @@ namespace DATLocalizationsTool
 
             foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
                 AddCmnTreeNodeToDataGridView(children);
+        }
+
+        private void AddCmnTreeNodeToDataGridView(CMN.CmnTreeNode cmnTreeNode, string searchString)
+        {
+            if (cmnTreeNode.StringNumber != -1)
+            {
+                string text = Dats[comboBox1.SelectedIndex].Item1.Strings[cmnTreeNode.StringNumber];
+                if (text.ToLower().Contains(searchString.ToLower()))
+                    dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
+            }
+
+            foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
+                AddCmnTreeNodeToDataGridView(children, searchString);
         }
 
         #endregion
@@ -153,6 +220,7 @@ namespace DATLocalizationsTool
 
         #endregion
 
+        #region dataGridView1 Events
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex == -1)
@@ -193,6 +261,54 @@ namespace DATLocalizationsTool
                 }           
             }
         }
+        
+        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.F)
+            {
+                using (SearchForm searchForm = new SearchForm())
+                {
+                    if (searchForm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (Cmn == null)
+                        {
+                            dataGridView1.Rows.Clear();
+                            int index = 0;
+                            foreach (string text in Dats[comboBox1.SelectedIndex].Item1.Strings)
+                            {
+                                if (text.ToLower().Contains(searchForm.SearchString.ToLower()))
+                                    dataGridView1.Rows.Add(index, null, text);
+                                index++;
+                            }
+                        }
+                        else if (Cmn != null)
+                        {
+                            dataGridView1.Rows.Clear();
+                            if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode && comboBox1.SelectedIndex != -1)
+                                AddCmnTreeNodeToDataGridView(cmnTreeNode, searchForm.SearchString);
+                            else if (treeView1.SelectedNode == null && comboBox1.SelectedIndex != -1)
+                                AddCmnTreeNodeToDataGridView(Cmn.root, searchForm.SearchString);
+                            dataGridView1.Sort(dataGridView1.Columns[0], ListSortDirection.Ascending);
+                        }
+                    }
+                }
+            }
+        }
+        
+        private void dataGridView1_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] filepaths = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+
+            foreach (string filepath in filepaths)
+                LoadFile(filepath);
+        }
+
+        private void dataGridView1_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.All;
+        }
+
+        #endregion
 
         #region ToolStripMenuItem Events
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -271,6 +387,8 @@ namespace DATLocalizationsTool
         private void treeView1_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
             // TO DO : FIX WITH MENU ITEM RENAME
+            
+
             if (e.Label != null)
             {
                 // Update cmnTreeNodeName when editing is finished
@@ -281,7 +399,6 @@ namespace DATLocalizationsTool
                 cmnTreeNode.Name = e.Label;
                 cmnTreeNode.VariableName = cmnTreeNode.Text.Remove(0, lengthToRemove);
 
-
                 // Refresh DataGridView with updated cmnTreeNode name
                 dataGridView1.Rows.Clear();
                 AddToDataGridView();
@@ -291,8 +408,44 @@ namespace DATLocalizationsTool
                 e.CancelEdit = true;
                 MessageBox.Show("Invalid tree node label.\nThe label cannot be blank",
                    "Node Label Edit");
-                // TO DO : Delete Node ( maybe ? )
+                
+                // Remove string from dat
+                Dats[comboBox1.SelectedIndex].Item1.Strings.RemoveAt(Dats[comboBox1.SelectedIndex].Item1.Strings.Count - 1);
+
+                // Remove cmnTreeNode from the parent childrens
+                CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)e.Node.Parent;
+                cmnTreeNodeParent.childrens.RemoveAt(cmnTreeNodeParent.childrens.Count - 1);
+
+                // Remove node from treeView
+                e.Node.Remove();
             }
+        }
+        private void treeView1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.F)
+            {
+                if (Cmn != null)
+                {
+                    using (SearchForm searchForm = new SearchForm())
+                    {
+                        if (searchForm.ShowDialog() == DialogResult.OK)
+                            SearchTreeView(searchForm.SearchString, treeView1.Nodes);
+                    }
+                }
+
+            }
+        }
+        private void treeView1_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] filepaths = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+
+            foreach (string filepath in filepaths)
+                LoadFile(filepath);
+        }
+
+        private void treeView1_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = DragDropEffects.All;
         }
 
         #endregion
@@ -304,13 +457,12 @@ namespace DATLocalizationsTool
             {
                 if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
                 {
+                    // Get string number by getting the string count
                     int stringNumber = Dats[comboBox1.SelectedIndex].Item1.Strings.Count;
 
                     // Add string to other Dats
                     for (int i = 0; i < comboBox1.Items.Count; i++)
                         Dats[i].Item1.Strings.Add("");
-
-                    //Dats[comboBox1.SelectedIndex].Strings.Add("");
 
                     CMN.CmnTreeNode newCmnTreeNode = new CMN.CmnTreeNode(cmnTreeNode.Text, cmnTreeNode.Text, stringNumber);
                     cmnTreeNode.childrens.Add(newCmnTreeNode);
@@ -333,6 +485,8 @@ namespace DATLocalizationsTool
                 }
             }
         }
+
+
 
 
     }
