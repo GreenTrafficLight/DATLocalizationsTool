@@ -382,15 +382,12 @@ namespace DATLocalizationsTool
                 MenuItem exitMenuItem = new MenuItem("Exit");
                 contextMenu.MenuItems.Add(exitMenuItem);
 
-                contextMenu.Show(treeView1, MousePosition);
+                contextMenu.Show(treeView1, treeView1.PointToClient(Cursor.Position));
             }
         }
 
         private void treeView1_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
-            // TO DO : FIX WITH MENU ITEM RENAME
-            
-
             if (e.Label != null)
             {
                 // Update cmnTreeNodeName when editing is finished
