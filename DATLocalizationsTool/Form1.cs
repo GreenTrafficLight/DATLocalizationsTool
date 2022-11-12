@@ -21,12 +21,14 @@ namespace DATLocalizationsTool
     public partial class Form1 : Form
     {
 
-        private List<string> ValidStrings = new List<string> {
+        private List<string> _validStrings = new List<string> {
             "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "Cmn"
         };
+        private bool _renameOption = false;
 
         List<Tuple<DAT, string>> Dats = new List<Tuple<DAT, string>>();
         CMN Cmn = null;
+
         string FilePath = "";
         public Form1()
         {
@@ -39,7 +41,7 @@ namespace DATLocalizationsTool
         {
             try
             {
-                if (ValidStrings.Contains(Path.GetFileNameWithoutExtension(filepath)))
+                if (_validStrings.Contains(Path.GetFileNameWithoutExtension(filepath)))
                 {
                     FilePath = Path.GetDirectoryName(filepath);
 
@@ -200,7 +202,7 @@ namespace DATLocalizationsTool
         #region TreeView
         private void AddToTreeView()
         {
-            foreach (CMN.CmnTreeNode children in Cmn.root.childrens)
+            foreach (CMN.CmnTreeNode children in Cmn.Root.childrens)
                 AddCmnTreeNodeToTreeView(children, null);
         }
 
@@ -287,7 +289,7 @@ namespace DATLocalizationsTool
                             if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode && comboBox1.SelectedIndex != -1)
                                 AddCmnTreeNodeToDataGridView(cmnTreeNode, searchForm.SearchString);
                             else if (treeView1.SelectedNode == null && comboBox1.SelectedIndex != -1)
-                                AddCmnTreeNodeToDataGridView(Cmn.root, searchForm.SearchString);
+                                AddCmnTreeNodeToDataGridView(Cmn.Root, searchForm.SearchString);
                             dataGridView1.Sort(dataGridView1.Columns[0], ListSortDirection.Ascending);
                         }
                     }
@@ -372,10 +374,10 @@ namespace DATLocalizationsTool
                     contextMenu.MenuItems.Add(newMenuItem);
                 }
 
-                /*MenuItem renameMenuItem = new MenuItem("Rename");
+                MenuItem renameMenuItem = new MenuItem("Rename");
                 renameMenuItem.Click += new EventHandler(MenuItem_Click);
                 renameMenuItem.Name = "Rename";
-                contextMenu.MenuItems.Add(renameMenuItem);*/
+                contextMenu.MenuItems.Add(renameMenuItem);
 
                 MenuItem exitMenuItem = new MenuItem("Exit");
                 contextMenu.MenuItems.Add(exitMenuItem);
@@ -394,7 +396,15 @@ namespace DATLocalizationsTool
                 // Update cmnTreeNodeName when editing is finished
                 e.Node.EndEdit(false);
                 CMN.CmnTreeNode cmnTreeNode = (CMN.CmnTreeNode)e.Node;
-                int lengthToRemove = cmnTreeNode.Text.Length;
+                int lengthToRemove = 0;
+                if (_renameOption == true)
+                {
+                    lengthToRemove = cmnTreeNode.Parent.Text.Length;
+                    _renameOption = false;
+                }
+                else
+                    lengthToRemove = cmnTreeNode.Text.Length;
+
                 cmnTreeNode.Text = e.Label;
                 cmnTreeNode.Name = e.Label;
                 cmnTreeNode.VariableName = cmnTreeNode.Text.Remove(0, lengthToRemove);
@@ -405,19 +415,27 @@ namespace DATLocalizationsTool
             }
             else
             {
-                e.CancelEdit = true;
-                MessageBox.Show("Invalid tree node label.\nThe label cannot be blank",
-                   "Node Label Edit");
-                
-                // Remove string from dat
-                Dats[comboBox1.SelectedIndex].Item1.Strings.RemoveAt(Dats[comboBox1.SelectedIndex].Item1.Strings.Count - 1);
+                if (_renameOption == true)
+                {
+                    e.Node.EndEdit(false);
+                    _renameOption = false;
+                }
+                else
+                {
+                    e.CancelEdit = true;
+                    MessageBox.Show("Invalid tree node label.\nThe label cannot be blank",
+                       "Node Label Edit");
 
-                // Remove cmnTreeNode from the parent childrens
-                CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)e.Node.Parent;
-                cmnTreeNodeParent.childrens.RemoveAt(cmnTreeNodeParent.childrens.Count - 1);
+                    // Remove string from dat
+                    Dats[comboBox1.SelectedIndex].Item1.Strings.RemoveAt(Dats[comboBox1.SelectedIndex].Item1.Strings.Count - 1);
 
-                // Remove node from treeView
-                e.Node.Remove();
+                    // Remove cmnTreeNode from the parent childrens
+                    CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)e.Node.Parent;
+                    cmnTreeNodeParent.childrens.RemoveAt(cmnTreeNodeParent.childrens.Count - 1);
+
+                    // Remove node from treeView
+                    e.Node.Remove();
+                }
             }
         }
         private void treeView1_KeyDown(object sender, KeyEventArgs e)
@@ -478,6 +496,8 @@ namespace DATLocalizationsTool
             }
             else if (menuItem.Name == "Rename")
             {
+                _renameOption = true;
+
                 if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
                 {
                     treeView1.LabelEdit = true;
