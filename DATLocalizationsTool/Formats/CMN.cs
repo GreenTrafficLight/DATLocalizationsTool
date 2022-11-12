@@ -20,14 +20,18 @@ namespace DATLocalizationsTool.Formats
 
             public CmnTreeNode(string nodeText, string name, int stringNumber)
             {
+                // Node properties
                 Text = nodeText;
                 Name = nodeText;
+
+                // CmnTreeNode properties
                 VariableName = name;
                 StringNumber = stringNumber;
             }
         }
 
-        public CmnTreeNode root = new CmnTreeNode("", "", -1);
+        public CmnTreeNode Root = new CmnTreeNode("", "", -1);
+        
         public void Read(string filepath)
         {
             byte[] data = File.ReadAllBytes(filepath);
@@ -37,14 +41,15 @@ namespace DATLocalizationsTool.Formats
 
             DATBinaryReader br = new DATBinaryReader(data);
 
-            root = ReadVariables(br, root);
+            Root = ReadVariables(br, Root);
         }
+        
         public void Write(string filepath)
         {
             DATBinaryWriter bw = new DATBinaryWriter();
 
-            bw.WriteInt(root.childrens.Count);
-            foreach(CmnTreeNode children in root.childrens)
+            bw.WriteInt(Root.childrens.Count);
+            foreach(CmnTreeNode children in Root.childrens)
                 WriteVariables(bw, children);
 
             byte[] data = bw.DATBinaryWriterData.ToArray();
@@ -74,7 +79,7 @@ namespace DATLocalizationsTool.Formats
 
         private void WriteVariables(DATBinaryWriter bw, CmnTreeNode node)
         {
-            //if (node.Text == "AircraftSkin_Description_zoef_0")
+            //if (node.Text == "Aircraft_Name_a130_test")
                 //Console.WriteLine("test");
 
             bw.WriteInt(node.VariableName.Length);
