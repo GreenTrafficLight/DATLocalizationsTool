@@ -82,8 +82,8 @@ namespace DATLocalizationsTool.Formats
             int index = 0;
             while (reader.Position < reader.Length)
             {
-                if (index == 33115)
-                    Console.WriteLine("test");
+                //if (index == 33115)
+                    //Console.WriteLine("test");
 
                 Strings.Add(reader.ReadString());
                 index++;

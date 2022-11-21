@@ -84,6 +84,7 @@
     <Compile Include="SearchForm.Designer.cs">
       <DependentUpon>SearchForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="StringGrid.cs" />
     <Compile Include="TextForm.cs">
       <SubType>Form</SubType>
     </Compile>
