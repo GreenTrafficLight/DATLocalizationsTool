@@ -76,7 +76,7 @@ namespace DATLocalizationsTool.Formats
 
             File.WriteAllBytes(filepath, data);
         }
-        
+      
         private void ReadStrings(DATBinaryReader reader)
         {
             int index = 0;

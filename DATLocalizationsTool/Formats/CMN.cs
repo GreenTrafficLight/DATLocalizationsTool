@@ -18,7 +18,25 @@ namespace DATLocalizationsTool.Formats
             public int StringNumber = -1;
             public List<CmnTreeNode> childrens = new List<CmnTreeNode>();
 
-            public CmnTreeNode(string nodeText, string name, int stringNumber)
+            public CmnTreeNode() : base()
+            {
+                Text = "";
+                Name = "";
+
+                VariableName = "";
+                StringNumber = -1;
+            }
+
+            public override object Clone()
+            {
+                var obj = (CmnTreeNode)base.Clone();
+                obj.VariableName = this.VariableName;
+                obj.StringNumber = this.StringNumber;
+                obj.childrens = this.childrens;
+                return obj;
+            }
+
+            public void SetProperties(string nodeText, string name, int stringNumber)
             {
                 // Node properties
                 Text = nodeText;
@@ -30,7 +48,7 @@ namespace DATLocalizationsTool.Formats
             }
         }
 
-        public CmnTreeNode Root = new CmnTreeNode("", "", -1);
+        public CmnTreeNode Root = new CmnTreeNode();
         
         public void Read(string filepath)
         {
@@ -61,6 +79,11 @@ namespace DATLocalizationsTool.Formats
             File.WriteAllBytes(filepath, data);
         }
 
+        public void CheckStringsToCompress()
+        {
+
+        }
+
         private CmnTreeNode ReadVariables(DATBinaryReader br, CmnTreeNode parent)
         {
 
@@ -71,7 +94,9 @@ namespace DATLocalizationsTool.Formats
                 int nameLength = br.ReadInt();
                 string name = br.ReadString(nameLength);
                 int stringNumber = br.ReadInt();
-                CmnTreeNode node = new CmnTreeNode(parent.Text + name, name, stringNumber);
+                CmnTreeNode node = new CmnTreeNode();
+                node.SetProperties(parent.Text + name, name, stringNumber);
+
                 parent.childrens.Add(ReadVariables(br, node));
             }
             return parent;
