@@ -74,6 +74,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="CmnTreeViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CmnTreeViewForm.Designer.cs">
+      <DependentUpon>CmnTreeViewForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formats\CMN.cs" />
     <Compile Include="Formats\DAT.cs" />
     <Compile Include="Program.cs" />
@@ -91,6 +97,9 @@
     <Compile Include="TextForm.Designer.cs">
       <DependentUpon>TextForm.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="CmnTreeViewForm.resx">
+      <DependentUpon>CmnTreeViewForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
