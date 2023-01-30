@@ -21,6 +21,7 @@ namespace DATLocalizationsTool
     public partial class Form1 : Form
     {
         private bool _renameOption = false;
+        private bool _newOption = false;
 
         public StringGrid StringGridEditor;
 
@@ -30,62 +31,143 @@ namespace DATLocalizationsTool
 
             StringGridEditor = new StringGrid(dataGridView1, treeView1, comboBox1);
         }
-        
-        #region dataGridView1 Events
-        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+
+        private void IDModications(int RowIndex, int stringNumber)
         {
-            if (e.RowIndex == -1)
-                return;
-
-            if (comboBox1.SelectedIndex != -1)
+            using (CmnTreeViewForm cmnTreeView = new CmnTreeViewForm(StringGridEditor.Cmn))
             {
-                // Modify existing string
-                if (dataGridView1.Rows[e.RowIndex].Cells[2].Value != null)
+                if (cmnTreeView.ShowDialog() == DialogResult.OK)
                 {
-                    string cellText = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
+                    var returnNode = treeView1.Nodes.Find(cmnTreeView.choosenNode, true);
+                    if (returnNode.Length == 1)
+                    {
+                        CMN.CmnTreeNode cmnNode = (CMN.CmnTreeNode)returnNode[0];
+                        // If text and string number has been assigned
+                        if (dataGridView1.Rows[RowIndex].Cells[2].Value != null)
+                        {
+                            // Refresh to current string number value
+                            stringNumber = Convert.ToInt32(dataGridView1.Rows[RowIndex].Cells[0].Value);
+                            dataGridView1.Rows[RowIndex].Cells[0].Value = stringNumber.ToString();
 
-                    int stringNumber = Convert.ToInt32(dataGridView1.Rows[e.RowIndex].Cells[0].Value);
-                    using (var textForm = new TextForm(cellText, e.RowIndex, e.ColumnIndex))
-                    {
-                        if (textForm.ShowDialog() == DialogResult.Cancel)
-                        {
-                            dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = textForm.DatText + "\0";
-                            StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings[stringNumber] = textForm.DatText + "\0";
+                            dataGridView1.Rows[RowIndex].Cells[1].Value = cmnNode.Text;
                         }
-                    }
-                }
-                // Add new string
-                else if (dataGridView1.Rows[e.RowIndex].Cells[2].Value == null)
-                {
-                    int stringNumber = StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Count;
-                    using (var textForm = new TextForm("", e.RowIndex, e.ColumnIndex))
-                    {
-                        if (textForm.ShowDialog() == DialogResult.Cancel)
+                        // If text and string number has not been assigned
+                        else if (dataGridView1.Rows[RowIndex].Cells[0].Value == null && dataGridView1.Rows[RowIndex].Cells[2].Value == null)
                         {
-                            dataGridView1.Rows.Add(stringNumber, null, textForm.DatText + "\0");
-                            StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add(textForm.DatText + "\0");
-                            // Add string to other Dats
-                            for (int i = 0; i < comboBox1.Items.Count; i++)
+                            StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add("\0");
+                            dataGridView1.Rows.Add(stringNumber, cmnNode.Text, "\0");
+                        }
+                        // If text has not been assigned and string number has been assigned
+                        else
+                        {
+                            dataGridView1.Rows[RowIndex].Cells[1].Value = cmnNode.Text;
+                        }
+
+                        cmnNode.StringNumber = stringNumber;
+                    }
+                    else
+                    {
+                        // Modifying ID value that has been assigned to N/A
+                        if (dataGridView1.Rows[RowIndex].Cells[1].Value != null)
+                        {
+                            returnNode = treeView1.Nodes.Find(dataGridView1.Rows[RowIndex].Cells[1].Value.ToString(), true);
+                            if (returnNode.Length == 1)
                             {
-                                if (i != comboBox1.SelectedIndex)
-                                    StringGridEditor.Dats[i].Item1.Strings.Add("");
+                                CMN.CmnTreeNode cmnNode = (CMN.CmnTreeNode)returnNode[0];
+                                cmnNode.StringNumber = -1;
+                                dataGridView1.Rows[RowIndex].Cells[1].Value = null;
                             }
                         }
                     }
+
                 }
             }
         }
         
-        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        private void StringModifications(object value, int RowIndex, int ColumnIndex, int stringNumber)
         {
-            if (e.Control && e.KeyCode == Keys.F)
+            switch (value)
             {
-                using (SearchForm searchForm = new SearchForm())
-                {
-                    if (searchForm.ShowDialog() == DialogResult.OK)
+                case null: // Add new string
+                    using (var textForm = new TextForm("", RowIndex, ColumnIndex))
                     {
-                        if (StringGridEditor.Cmn == null)
+                        if (textForm.ShowDialog() == DialogResult.Cancel)
                         {
+                            if (textForm.DatText != "")
+                            {
+                                if (dataGridView1.Rows[RowIndex].Cells[1].Value != null)
+                                    dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value = textForm.DatText + "\0";
+                                else
+                                    dataGridView1.Rows.Add(stringNumber, null, textForm.DatText + "\0");
+
+                                StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add(textForm.DatText + "\0");
+
+                                // Add string to other Dats
+                                for (int i = 0; i < comboBox1.Items.Count; i++)
+                                {
+                                    if (i != comboBox1.SelectedIndex)
+                                        StringGridEditor.Dats[i].Item1.Strings.Add("");
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                default: // Modify existing string
+                    string cellText = dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value.ToString();
+
+                    stringNumber = Convert.ToInt32(dataGridView1.Rows[RowIndex].Cells[0].Value);
+                    using (var textForm = new TextForm(cellText, RowIndex, ColumnIndex))
+                    {
+                        if (textForm.ShowDialog() == DialogResult.Cancel)
+                        {
+                            dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value = textForm.DatText + "\0";
+                            StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings[stringNumber] = textForm.DatText + "\0";
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        private (string, CMN.CmnTreeNode, int) SearchForSubString(CMN.CmnTreeNode addedCmnTreeNode, string addedCmnTreeNodeText)
+        {
+            string subString = "";
+            CMN.CmnTreeNode duplicateTreeNode = null;
+            int sortIndex = 0;
+
+            // Check if there is another node that can merged
+            for (int i = 0; i < addedCmnTreeNode.Parent.Nodes.Count - 1; i++)
+            {
+                CMN.CmnTreeNode treeNode = (CMN.CmnTreeNode)addedCmnTreeNode.Parent.Nodes[i];
+
+                int n = addedCmnTreeNodeText.Length;
+                int m = treeNode.Text.Length;
+                int min = n < m ? n : m;
+
+                for (int j = addedCmnTreeNode.Parent.Text.Length; j < min; j++)
+                {
+                    if (addedCmnTreeNodeText[j] != treeNode.Text[j])
+                        break;
+
+                    subString = treeNode.Text.Substring(0, j + 1);
+                    duplicateTreeNode = treeNode;
+                }
+
+                if (string.Compare(treeNode.Text, addedCmnTreeNodeText) < 0)
+                    sortIndex++;
+            }
+            return (subString, duplicateTreeNode, sortIndex);
+        }
+        
+        private void Search()
+        {
+            using (SearchForm searchForm = new SearchForm())
+            {
+                if (searchForm.ShowDialog() == DialogResult.OK)
+                {
+                    switch (StringGridEditor.Cmn)
+                    {
+                        case null:
                             dataGridView1.Rows.Clear();
                             int index = 0;
                             foreach (string text in StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings)
@@ -94,18 +176,54 @@ namespace DATLocalizationsTool
                                     dataGridView1.Rows.Add(index, null, text);
                                 index++;
                             }
-                        }
-                        else if (StringGridEditor.Cmn != null)
-                        {
+                            break;
+
+                        default:
                             dataGridView1.Rows.Clear();
                             if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode && comboBox1.SelectedIndex != -1)
                                 StringGridEditor.AddCmnTreeNodeToDataGridView(cmnTreeNode, searchForm.SearchString);
                             else if (treeView1.SelectedNode == null && comboBox1.SelectedIndex != -1)
                                 StringGridEditor.AddCmnTreeNodeToDataGridView(StringGridEditor.Cmn.Root, searchForm.SearchString);
                             dataGridView1.Sort(dataGridView1.Columns[0], ListSortDirection.Ascending);
-                        }
+                            break;
                     }
                 }
+            }
+        }
+
+        #region dataGridView1 Events
+        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex == -1)
+                return;
+
+            if (comboBox1.SelectedIndex != -1)
+            {
+                int stringNumber = StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Count;
+
+                switch (dataGridView1.CurrentCell.ColumnIndex)
+                {
+                    case 1: // Add new ID
+                        IDModications(e.RowIndex, stringNumber);
+                        break;
+                    case 2: // String Modifications
+                        StringModifications(dataGridView1.Rows[e.RowIndex].Cells[2].Value, e.RowIndex, e.ColumnIndex, stringNumber);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (comboBox1.SelectedIndex == -1 && StringGridEditor.Dats.Any())
+            {
+                MessageBox.Show("Select a language .dat in the top right corner", "DAT Selection");
+            }
+        }
+        
+        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.F)
+            {
+                Search();
             }
         }
         
@@ -120,6 +238,37 @@ namespace DATLocalizationsTool
         private void dataGridView1_DragEnter(object sender, DragEventArgs e)
         {
             e.Effect = DragDropEffects.All;
+        }
+
+        private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)        /*If a header cell*/
+                return;
+
+            if (e.Value == null || e.Value == DBNull.Value)  /*If value is null*/
+            {
+                e.Paint(e.CellBounds, DataGridViewPaintParts.All & ~(DataGridViewPaintParts.ContentForeground));
+
+                switch (e.ColumnIndex)
+                {
+                    case 0:
+                        TextRenderer.DrawText(e.Graphics, "N/A", e.CellStyle.Font, e.CellBounds, SystemColors.GrayText, TextFormatFlags.Left);
+                        break;
+
+                    case 1:
+                        TextRenderer.DrawText(e.Graphics, "Select ID ( double click )", e.CellStyle.Font, e.CellBounds, SystemColors.GrayText, TextFormatFlags.Left);
+                        break;
+
+                    case 2:
+                        TextRenderer.DrawText(e.Graphics, "Enter text", e.CellStyle.Font, e.CellBounds, SystemColors.GrayText, TextFormatFlags.Left);
+                        break;
+
+                    default:
+                        break;
+                }
+
+                e.Handled = true;
+            }
         }
 
         #endregion
@@ -157,10 +306,14 @@ namespace DATLocalizationsTool
         }
 
         #endregion
+
+        #region comboBox1
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             StringGridEditor.AddToDataGridView();
         }
+
+        #endregion
 
         #region TreeView Events
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
@@ -174,66 +327,206 @@ namespace DATLocalizationsTool
             {
                 treeView1.SelectedNode = e.Node;
 
-                ContextMenu contextMenu = new ContextMenu();
-
-                if (comboBox1.SelectedIndex != -1)
+                if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
                 {
+                    ContextMenu contextMenu = new ContextMenu();
+
                     MenuItem newMenuItem = new MenuItem("New");
                     newMenuItem.Click += new EventHandler(MenuItem_Click);
                     newMenuItem.Name = "New";
+                    if (cmnTreeNode.StringNumber != -1)
+                        newMenuItem.Enabled = false;
                     contextMenu.MenuItems.Add(newMenuItem);
+
+                    MenuItem renameMenuItem = new MenuItem("Rename");
+                    renameMenuItem.Click += new EventHandler(MenuItem_Click);
+                    renameMenuItem.Name = "Rename";
+                    if (cmnTreeNode.Nodes.Count > 0)
+                        renameMenuItem.Enabled = false;
+                    contextMenu.MenuItems.Add(renameMenuItem);
+
+                    MenuItem deleteMenuItem = new MenuItem("Delete");
+                    deleteMenuItem.Click += new EventHandler(MenuItem_Click);
+                    deleteMenuItem.Name = "Delete";
+                    if (cmnTreeNode.Nodes.Count > 0)
+                        deleteMenuItem.Enabled = false;
+                    contextMenu.MenuItems.Add(deleteMenuItem);
+
+                    MenuItem exitMenuItem = new MenuItem("Exit");
+                    contextMenu.MenuItems.Add(exitMenuItem);
+
+                    contextMenu.Show(treeView1, treeView1.PointToClient(Cursor.Position));
                 }
-
-                MenuItem renameMenuItem = new MenuItem("Rename");
-                renameMenuItem.Click += new EventHandler(MenuItem_Click);
-                renameMenuItem.Name = "Rename";
-                contextMenu.MenuItems.Add(renameMenuItem);
-
-                MenuItem exitMenuItem = new MenuItem("Exit");
-                contextMenu.MenuItems.Add(exitMenuItem);
-
-                contextMenu.Show(treeView1, treeView1.PointToClient(Cursor.Position));
             }
         }
 
         private void treeView1_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
+            CMN.CmnTreeNode addedCmnTreeNode = (CMN.CmnTreeNode)e.Node;
+
+            // If label has been edited
             if (e.Label != null)
             {
-                // Update cmnTreeNodeName when editing is finished
-                e.Node.EndEdit(false);
-                CMN.CmnTreeNode cmnTreeNode = (CMN.CmnTreeNode)e.Node;
-                int lengthToRemove = 0;
-                if (_renameOption == true)
+                // Check if the entered string contains the parent branch name
+                if (!e.Label.StartsWith(addedCmnTreeNode.Parent.Text))
                 {
-                    lengthToRemove = cmnTreeNode.Parent.Text.Length;
-                    _renameOption = false;
+                    e.CancelEdit = true;
+                    MessageBox.Show(string.Format("Invalid branch name.\nThe parent branch name \"{0}\" should not be removed.", addedCmnTreeNode.Parent.Text),
+                       "Node Label Edit");
+
+                    // Remove branch if the user remove characters from the parent with the "New" menu item
+                    if (_renameOption == false)
+                    {
+                        // Remove cmnTreeNode from the parent childrens
+                        CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)e.Node.Parent;
+                        cmnTreeNodeParent.childrens.RemoveAt(cmnTreeNodeParent.childrens.Count - 1);
+
+                        // Remove node from treeView
+                        e.Node.Remove();
+                    }
+                }
+                else if (e.Label.Equals(addedCmnTreeNode.Parent.Text))
+                {
+                    e.CancelEdit = true;
+                    MessageBox.Show(string.Format("Invalid tree node label.\nThe label should not be the same as the parent branch name \"{0}\".", addedCmnTreeNode.Parent.Text),
+                        "Node Label Edit");
                 }
                 else
-                    lengthToRemove = cmnTreeNode.Text.Length;
+                {
+                    // Update cmnTreeNodeName when editing is finished
+                    e.Node.EndEdit(false);
 
-                cmnTreeNode.Text = e.Label;
-                cmnTreeNode.Name = e.Label;
-                cmnTreeNode.VariableName = cmnTreeNode.Text.Remove(0, lengthToRemove);
+                    // Check if there is another node that can merged
+                    (string subString, CMN.CmnTreeNode duplicateTreeNode, int sortIndex) = SearchForSubString(addedCmnTreeNode, e.Label);
 
-                // Refresh DataGridView with updated cmnTreeNode name
-                StringGridEditor.AddToDataGridView();
+                    CMN.CmnTreeNode parentCmnTreeNode = (CMN.CmnTreeNode)addedCmnTreeNode.Parent;
+
+                    if (subString != "")
+                    {
+                        // TO FIX : Search if substring node already exist
+
+                        e.CancelEdit = true;
+
+                        CMN.CmnTreeNode newTreeNode = null;
+
+                        if (parentCmnTreeNode.Nodes.ContainsKey(subString))
+                        {
+                            while (parentCmnTreeNode.Nodes.ContainsKey(subString))
+                            {
+                                addedCmnTreeNode.Remove();
+                                addedCmnTreeNode.SetProperties(e.Label, e.Label.Substring(subString.Length), -1);
+                                parentCmnTreeNode.Nodes[subString].Nodes.Add(addedCmnTreeNode);
+
+                                // Check if there is another node that can merged
+                                (subString, duplicateTreeNode, sortIndex) = SearchForSubString(addedCmnTreeNode, e.Label);
+
+                                parentCmnTreeNode = (CMN.CmnTreeNode)addedCmnTreeNode.Parent;
+                            }
+                            addedCmnTreeNode.Remove();
+                            parentCmnTreeNode.Nodes.Insert(sortIndex, addedCmnTreeNode);
+                            parentCmnTreeNode.childrens.Insert(sortIndex, addedCmnTreeNode);
+                        }
+                        
+                        else
+                        {
+                            // Rename the tree node that was added as a merged parent
+                            addedCmnTreeNode.Remove();
+                            parentCmnTreeNode.childrens.RemoveAt(addedCmnTreeNode.Index);
+                            addedCmnTreeNode.SetProperties(subString, addedCmnTreeNode.Text.Remove(0, parentCmnTreeNode.Text.Length), -1);
+                            parentCmnTreeNode.Nodes.Insert(sortIndex, addedCmnTreeNode);
+                            parentCmnTreeNode.childrens.Insert(sortIndex, addedCmnTreeNode);
+
+                            // Add the tree node that was added to the merged parent
+                            if (!addedCmnTreeNode.Text.Equals(e.Label))
+                            {
+                                newTreeNode = new CMN.CmnTreeNode();
+                                newTreeNode.SetProperties(e.Label, e.Label.Substring(subString.Length), -1);
+                                addedCmnTreeNode.childrens.Add(newTreeNode);
+                                addedCmnTreeNode.Nodes.Add(newTreeNode);
+                            }
+
+                            if (duplicateTreeNode != null)
+                            {
+                                parentCmnTreeNode.childrens.RemoveAt(duplicateTreeNode.Index);
+
+                                duplicateTreeNode.Remove();
+
+                                // Add the found tree node to the merged parent
+                                if (!addedCmnTreeNode.Text.Equals(duplicateTreeNode.Text))
+                                {
+                                    duplicateTreeNode.SetProperties(duplicateTreeNode.Text, duplicateTreeNode.Text.Substring(subString.Length), duplicateTreeNode.StringNumber);
+                                    if (newTreeNode != null)
+                                    {
+                                        // Sort node
+                                        if (string.Compare(duplicateTreeNode.Text, newTreeNode.Text) < 0)
+                                        {
+                                            addedCmnTreeNode.childrens.Insert(newTreeNode.Index, duplicateTreeNode);
+                                            addedCmnTreeNode.Nodes.Insert(newTreeNode.Index, duplicateTreeNode);
+                                        }
+                                        else if (string.Compare(duplicateTreeNode.Text, newTreeNode.Text) > 0)
+                                        {
+                                            addedCmnTreeNode.childrens.Insert(newTreeNode.Index + 1, duplicateTreeNode);
+                                            addedCmnTreeNode.Nodes.Insert(newTreeNode.Index + 1, duplicateTreeNode);
+                                        }
+
+                                    }
+                                    // Add the tree node that was added as a parent
+                                    else
+                                    {
+                                        addedCmnTreeNode.childrens.Add(duplicateTreeNode);
+                                        addedCmnTreeNode.Nodes.Add(duplicateTreeNode);
+                                    }
+                                }
+                            }
+                        }
+
+                        
+
+                        _newOption = false;
+                    }
+                    
+                    else
+                    {
+                        int lengthToRemove = 0;
+                        if (_renameOption == true)
+                        {
+                            lengthToRemove = addedCmnTreeNode.Parent.Text.Length;
+                            _renameOption = false;
+                        }
+                        else
+                            lengthToRemove = addedCmnTreeNode.Text.Length;
+
+                        addedCmnTreeNode.SetProperties(e.Label, addedCmnTreeNode.Text.Remove(0, lengthToRemove), -1);
+
+                        // Sort the added node
+                        addedCmnTreeNode.Remove();
+                        parentCmnTreeNode.childrens.RemoveAt(addedCmnTreeNode.Index);
+                        parentCmnTreeNode.Nodes.Insert(sortIndex, addedCmnTreeNode);
+                        parentCmnTreeNode.childrens.Insert(sortIndex, addedCmnTreeNode);
+
+                        _newOption = false;
+                    }
+
+                    // Refresh DataGridView with updated cmnTreeNode name
+                    StringGridEditor.AddToDataGridView();
+                }
+
             }
+            // If label has not been edited
             else
             {
+                // If it's the rename option, don't show error
                 if (_renameOption == true)
                 {
                     e.Node.EndEdit(false);
                     _renameOption = false;
                 }
-                else
+                // Show error if the user didn't enter anything for the new branch name
+                else if (_newOption == true)
                 {
                     e.CancelEdit = true;
-                    MessageBox.Show("Invalid tree node label.\nThe label cannot be blank",
+                    MessageBox.Show("Invalid tree node label.\nThe label cannot be blank.",
                        "Node Label Edit");
-
-                    // Remove string from dat
-                    StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.RemoveAt(StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Count - 1);
 
                     // Remove cmnTreeNode from the parent childrens
                     CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)e.Node.Parent;
@@ -241,8 +534,13 @@ namespace DATLocalizationsTool
 
                     // Remove node from treeView
                     e.Node.Remove();
+
+                    _newOption = false;
                 }
             }
+
+            treeView1.LabelEdit = false;
+            treeView1.SelectedNode = null;
         }
         
         private void treeView1_KeyDown(object sender, KeyEventArgs e)
@@ -257,7 +555,10 @@ namespace DATLocalizationsTool
                             StringGridEditor.SearchTreeView(searchForm.SearchString, treeView1.Nodes);
                     }
                 }
-
+            }
+            else if (e.Control && e.KeyCode == Keys.S)
+            {
+                StringGridEditor.SaveFile();
             }
         }
         
@@ -279,38 +580,66 @@ namespace DATLocalizationsTool
         {
             MenuItem menuItem = (MenuItem)sender;
 
-            if (menuItem.Name == "New")
+            CMN.CmnTreeNode cmnTreeNode;
+
+            switch (menuItem.Name)
             {
-                if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
-                {
-                    // Get string number by getting the string count
-                    int stringNumber = StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Count;
+                case "New":
+                    if (treeView1.SelectedNode is CMN.CmnTreeNode)
+                    {
+                        cmnTreeNode = (CMN.CmnTreeNode)treeView1.SelectedNode;
+                        _newOption = true;
+                        CMN.CmnTreeNode newCmnTreeNode = new CMN.CmnTreeNode();
+                        newCmnTreeNode.SetProperties(cmnTreeNode.Text, cmnTreeNode.Text, -1);
 
-                    // Add string to other Dats
-                    for (int i = 0; i < comboBox1.Items.Count; i++)
-                        StringGridEditor.Dats[i].Item1.Strings.Add("");
+                        cmnTreeNode.childrens.Add(newCmnTreeNode);
 
-                    CMN.CmnTreeNode newCmnTreeNode = new CMN.CmnTreeNode(cmnTreeNode.Text, cmnTreeNode.Text, stringNumber);
-                    cmnTreeNode.childrens.Add(newCmnTreeNode);
+                        // Add newCmnTreeNode to treeView1
+                        cmnTreeNode.Nodes.Add(newCmnTreeNode);
 
-                    // Add newCmnTreeNode to treeView1
-                    cmnTreeNode.Nodes.Add(newCmnTreeNode);
+                        // Begin editing of newCmnTreeNode name
+                        treeView1.SelectedNode = newCmnTreeNode;
+                        treeView1.LabelEdit = true;
+                        treeView1.SelectedNode.BeginEdit();
+                    }
+                    break;
+                case "Rename":
+                    cmnTreeNode = (CMN.CmnTreeNode)treeView1.SelectedNode;
+                    _renameOption = true;
 
-                    // Begin editing of newCmnTreeNode name
-                    treeView1.SelectedNode = newCmnTreeNode;
-                    treeView1.LabelEdit = true;
-                    treeView1.SelectedNode.BeginEdit();
-                }
-            }
-            else if (menuItem.Name == "Rename")
-            {
-                _renameOption = true;
+                    if (treeView1.SelectedNode is CMN.CmnTreeNode)
+                    {
+                        if (cmnTreeNode.Nodes.Count > 0)
+                        {
+                            MessageBox.Show("Cannot rename node because of subranches", "Node Rename");
+                        }
+                        else
+                        {
+                            treeView1.LabelEdit = true;
+                            treeView1.SelectedNode.BeginEdit();
+                        }
+                    }
+                    break;
+                case "Delete":
+                    cmnTreeNode = (CMN.CmnTreeNode)treeView1.SelectedNode;
+                    if (treeView1.SelectedNode is CMN.CmnTreeNode)
+                    {
+                        if (cmnTreeNode.Nodes.Count > 0)
+                        {
+                            MessageBox.Show("Cannot delete node because of subranches", "Node Delete");
+                        }
+                        else
+                        {
+                            var result = MessageBox.Show("Do you want to delete this branch ?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
+                            if (result == DialogResult.Yes)
+                            {
 
-                if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
-                {
-                    treeView1.LabelEdit = true;
-                    treeView1.SelectedNode.BeginEdit();
-                }
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }
