@@ -32,15 +32,7 @@ namespace DATLocalizationsTool
             treeView1 = treeView;
             comboBox1 = comboBox;
 
-            dataGridView1.Columns.Clear();
-            dataGridView1.Columns.Add("designNumber", "Number");
-            dataGridView1.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            dataGridView1.Columns.Add("designID", "ID");
-            dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            dataGridView1.Columns.Add("designText", "Text");
-            dataGridView1.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
-            dataGridView1.Sort(dataGridView1.Columns[0], ListSortDirection.Ascending);
+            LoadDataGridView();
         }
         public void LoadFile(string filepath)
         {
@@ -96,6 +88,7 @@ namespace DATLocalizationsTool
                 comboBox1.Items[index] = fileName;
                 Dats[index] = new Tuple<DAT, string>(dat, fileName);
             }
+            comboBox1.SelectedIndex = Dats.FindIndex(d => d.Item2 == fileName);
         }
 
         public void LoadCmn(string filepath)
@@ -153,6 +146,22 @@ namespace DATLocalizationsTool
         }
 
         #region dataGridView
+        public void LoadDataGridView()
+        {
+            dataGridView1.Columns.Clear();
+            dataGridView1.Columns.Add("designNumber", "Number");
+            dataGridView1.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            dataGridView1.Columns[0].ReadOnly = true;
+            dataGridView1.Columns.Add("designID", "ID");
+            dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            dataGridView1.Columns[1].ReadOnly = true;
+            dataGridView1.Columns.Add("designText", "Text");
+            dataGridView1.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dataGridView1.Columns[2].ReadOnly = true;
+
+            dataGridView1.Sort(dataGridView1.Columns[0], ListSortDirection.Ascending);
+        }
+        
         public void AddToDataGridView()
         {
             dataGridView1.Rows.Clear();
@@ -185,6 +194,16 @@ namespace DATLocalizationsTool
             {
                 string text = Dats[comboBox1.SelectedIndex].Item1.Strings[cmnTreeNode.StringNumber];
                 dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
+                /*if (Dats[comboBox1.SelectedIndex].Item1.Strings.Count > cmnTreeNode.StringNumber)
+                {
+                    string text = Dats[comboBox1.SelectedIndex].Item1.Strings[cmnTreeNode.StringNumber];
+                    dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
+                }
+                else
+                {
+                    dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, null);
+                }*/
+
             }
 
             foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
