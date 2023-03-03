@@ -129,36 +129,87 @@ namespace DATLocalizationsTool
             }
         }
         
-        private (string, CMN.CmnTreeNode, int) SearchForSubString(CMN.CmnTreeNode addedCmnTreeNode, string addedCmnTreeNodeText)
+        // Helper function to get the index of the common substring between two strings
+        private int GetCommonSubstringIndex(string str1, string str2, int startIndex = 0)
         {
-            string subString = "";
-            CMN.CmnTreeNode duplicateTreeNode = null;
+            int index = -1;
+
+            for (int i = startIndex; i < Math.Min(str1.Length, str2.Length); i++)
+            {
+                if (str1[i] != str2[i])
+                {
+                    return index;
+                }
+                index++;
+            }
+            return index;
+        }
+
+        private void addTreeNodeBySorted(CMN.CmnTreeNode treeNode, CMN.CmnTreeNode treeNodeParent)
+        {
             int sortIndex = 0;
 
-            // Check if there is another node that can merged
-            for (int i = 0; i < addedCmnTreeNode.Parent.Nodes.Count - 1; i++)
+            // Find the correct position to insert the new node
+            while (sortIndex < treeNodeParent.Nodes.Count && string.Compare(treeNode.Text, treeNodeParent.Nodes[sortIndex].Text) > 0)
             {
-                CMN.CmnTreeNode treeNode = (CMN.CmnTreeNode)addedCmnTreeNode.Parent.Nodes[i];
-
-                int n = addedCmnTreeNodeText.Length;
-                int m = treeNode.Text.Length;
-                int min = n < m ? n : m;
-
-                for (int j = addedCmnTreeNode.Parent.Text.Length; j < min; j++)
-                {
-                    if (addedCmnTreeNodeText[j] != treeNode.Text[j])
-                        break;
-
-                    subString = treeNode.Text.Substring(0, j + 1);
-                    duplicateTreeNode = treeNode;
-                }
-
-                if (string.Compare(treeNode.Text, addedCmnTreeNodeText) < 0)
-                    sortIndex++;
+                sortIndex++;
             }
-            return (subString, duplicateTreeNode, sortIndex);
+
+            if (sortIndex < treeNodeParent.Nodes.Count)
+            {
+                treeNodeParent.Nodes.Insert(sortIndex, treeNode);
+                treeNodeParent.childrens.Insert(sortIndex, treeNode);
+            }
+            else
+            {
+                treeNodeParent.Nodes.Add(treeNode);
+                treeNodeParent.childrens.Add(treeNode);
+            }
+                
         }
-        
+
+        private void MergeNodes(CMN.CmnTreeNode addedCmnTreeNode, string subString, CMN.CmnTreeNode addedCmnTreeNodeParent)
+        {
+            for (int i = 0; i < addedCmnTreeNodeParent.Nodes.Count; i++)
+            {
+                CMN.CmnTreeNode treeNode = (CMN.CmnTreeNode)addedCmnTreeNodeParent.Nodes[i];
+
+                int index = GetCommonSubstringIndex(addedCmnTreeNode.Text, treeNode.Text, subString.Length);
+
+                if (index != -1 && !treeNode.Text.Equals(addedCmnTreeNode.Text))
+                {
+                    subString = treeNode.Text.Substring(0, addedCmnTreeNodeParent.Text.Length + index + 1);
+                    addedCmnTreeNodeParent.Nodes.Remove(addedCmnTreeNode);
+                    addedCmnTreeNodeParent.childrens.Remove(addedCmnTreeNode);
+                    if (!subString.Equals(treeNode.Text))
+                    {
+                        CMN.CmnTreeNode mergedCmnTreeNode = new CMN.CmnTreeNode();
+                        mergedCmnTreeNode.SetProperties(subString, subString.Remove(0, addedCmnTreeNodeParent.Text.Length), -1);
+                        addedCmnTreeNodeParent.Nodes.Add(mergedCmnTreeNode);
+                        addedCmnTreeNodeParent.childrens.Add(mergedCmnTreeNode);
+                        
+                        addedCmnTreeNodeParent.Nodes.Remove(treeNode);
+                        addedCmnTreeNodeParent.childrens.Remove(treeNode);
+                        
+                        treeNode.SetProperties(treeNode.Text, treeNode.Text.Remove(0, mergedCmnTreeNode.Text.Length), treeNode.StringNumber);
+                        mergedCmnTreeNode.Nodes.Add(treeNode);
+                        mergedCmnTreeNode.childrens.Add(treeNode);
+
+                        addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, mergedCmnTreeNode.Text.Length), addedCmnTreeNode.StringNumber);
+                        if (!addedCmnTreeNode.Text.Equals(mergedCmnTreeNode.Text))
+                            addTreeNodeBySorted(addedCmnTreeNode, mergedCmnTreeNode);                        
+                    }
+                    else
+                    {
+                        addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), addedCmnTreeNode.StringNumber);
+                        addTreeNodeBySorted(addedCmnTreeNode, treeNode);
+                    }
+                    
+                    MergeNodes(addedCmnTreeNode, subString, treeNode);
+                    break;
+                }
+            }
+        }
         private void Search()
         {
             using (SearchForm searchForm = new SearchForm())
@@ -396,116 +447,14 @@ namespace DATLocalizationsTool
                     // Update cmnTreeNodeName when editing is finished
                     e.Node.EndEdit(false);
 
-                    // Check if there is another node that can merged
-                    (string subString, CMN.CmnTreeNode duplicateTreeNode, int sortIndex) = SearchForSubString(addedCmnTreeNode, e.Label);
+                    addedCmnTreeNode.SetProperties(e.Label, e.Label, -1);
+                    CMN.CmnTreeNode addedCmnTreeNodeParent = (CMN.CmnTreeNode)addedCmnTreeNode.Parent;
 
-                    CMN.CmnTreeNode parentCmnTreeNode = (CMN.CmnTreeNode)addedCmnTreeNode.Parent;
+                    addedCmnTreeNode.Remove();
 
-                    if (subString != "")
-                    {
-                        // TO FIX : Search if substring node already exist
+                    addTreeNodeBySorted(addedCmnTreeNode, addedCmnTreeNodeParent);
 
-                        e.CancelEdit = true;
-
-                        CMN.CmnTreeNode newTreeNode = null;
-
-                        if (parentCmnTreeNode.Nodes.ContainsKey(subString))
-                        {
-                            while (parentCmnTreeNode.Nodes.ContainsKey(subString))
-                            {
-                                addedCmnTreeNode.Remove();
-                                addedCmnTreeNode.SetProperties(e.Label, e.Label.Substring(subString.Length), -1);
-                                parentCmnTreeNode.Nodes[subString].Nodes.Add(addedCmnTreeNode);
-
-                                // Check if there is another node that can merged
-                                (subString, duplicateTreeNode, sortIndex) = SearchForSubString(addedCmnTreeNode, e.Label);
-
-                                parentCmnTreeNode = (CMN.CmnTreeNode)addedCmnTreeNode.Parent;
-                            }
-                            addedCmnTreeNode.Remove();
-                            parentCmnTreeNode.Nodes.Insert(sortIndex, addedCmnTreeNode);
-                            parentCmnTreeNode.childrens.Insert(sortIndex, addedCmnTreeNode);
-                        }
-                        
-                        else
-                        {
-                            // Rename the tree node that was added as a merged parent
-                            addedCmnTreeNode.Remove();
-                            parentCmnTreeNode.childrens.RemoveAt(addedCmnTreeNode.Index);
-                            addedCmnTreeNode.SetProperties(subString, addedCmnTreeNode.Text.Remove(0, parentCmnTreeNode.Text.Length), -1);
-                            parentCmnTreeNode.Nodes.Insert(sortIndex, addedCmnTreeNode);
-                            parentCmnTreeNode.childrens.Insert(sortIndex, addedCmnTreeNode);
-
-                            // Add the tree node that was added to the merged parent
-                            if (!addedCmnTreeNode.Text.Equals(e.Label))
-                            {
-                                newTreeNode = new CMN.CmnTreeNode();
-                                newTreeNode.SetProperties(e.Label, e.Label.Substring(subString.Length), -1);
-                                addedCmnTreeNode.childrens.Add(newTreeNode);
-                                addedCmnTreeNode.Nodes.Add(newTreeNode);
-                            }
-
-                            if (duplicateTreeNode != null)
-                            {
-                                parentCmnTreeNode.childrens.RemoveAt(duplicateTreeNode.Index);
-
-                                duplicateTreeNode.Remove();
-
-                                // Add the found tree node to the merged parent
-                                if (!addedCmnTreeNode.Text.Equals(duplicateTreeNode.Text))
-                                {
-                                    duplicateTreeNode.SetProperties(duplicateTreeNode.Text, duplicateTreeNode.Text.Substring(subString.Length), duplicateTreeNode.StringNumber);
-                                    if (newTreeNode != null)
-                                    {
-                                        // Sort node
-                                        if (string.Compare(duplicateTreeNode.Text, newTreeNode.Text) < 0)
-                                        {
-                                            addedCmnTreeNode.childrens.Insert(newTreeNode.Index, duplicateTreeNode);
-                                            addedCmnTreeNode.Nodes.Insert(newTreeNode.Index, duplicateTreeNode);
-                                        }
-                                        else if (string.Compare(duplicateTreeNode.Text, newTreeNode.Text) > 0)
-                                        {
-                                            addedCmnTreeNode.childrens.Insert(newTreeNode.Index + 1, duplicateTreeNode);
-                                            addedCmnTreeNode.Nodes.Insert(newTreeNode.Index + 1, duplicateTreeNode);
-                                        }
-
-                                    }
-                                    // Add the tree node that was added as a parent
-                                    else
-                                    {
-                                        addedCmnTreeNode.childrens.Add(duplicateTreeNode);
-                                        addedCmnTreeNode.Nodes.Add(duplicateTreeNode);
-                                    }
-                                }
-                            }
-                        }
-
-                        
-
-                        _newOption = false;
-                    }
-                    
-                    else
-                    {
-                        int lengthToRemove = 0;
-                        if (_renameOption == true)
-                        {
-                            lengthToRemove = addedCmnTreeNode.Parent.Text.Length;
-                            _renameOption = false;
-                        }
-                        else
-                            lengthToRemove = addedCmnTreeNode.Text.Length;
-
-                        addedCmnTreeNode.SetProperties(e.Label, addedCmnTreeNode.Text.Remove(0, lengthToRemove), -1);
-
-                        // Sort the added node
-                        addedCmnTreeNode.Remove();
-                        parentCmnTreeNode.childrens.RemoveAt(addedCmnTreeNode.Index);
-                        parentCmnTreeNode.Nodes.Insert(sortIndex, addedCmnTreeNode);
-                        parentCmnTreeNode.childrens.Insert(sortIndex, addedCmnTreeNode);
-
-                        _newOption = false;
-                    }
+                    MergeNodes(addedCmnTreeNode, addedCmnTreeNode.Parent.Text, (CMN.CmnTreeNode)addedCmnTreeNode.Parent);
 
                     // Refresh DataGridView with updated cmnTreeNode name
                     StringGridEditor.AddToDataGridView();
@@ -591,8 +540,6 @@ namespace DATLocalizationsTool
                         _newOption = true;
                         CMN.CmnTreeNode newCmnTreeNode = new CMN.CmnTreeNode();
                         newCmnTreeNode.SetProperties(cmnTreeNode.Text, cmnTreeNode.Text, -1);
-
-                        cmnTreeNode.childrens.Add(newCmnTreeNode);
 
                         // Add newCmnTreeNode to treeView1
                         cmnTreeNode.Nodes.Add(newCmnTreeNode);
