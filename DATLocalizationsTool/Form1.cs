@@ -447,8 +447,10 @@ namespace DATLocalizationsTool
                     // Update cmnTreeNodeName when editing is finished
                     e.Node.EndEdit(false);
 
-                    addedCmnTreeNode.SetProperties(e.Label, e.Label, -1);
+                    e.CancelEdit = true;
+
                     CMN.CmnTreeNode addedCmnTreeNodeParent = (CMN.CmnTreeNode)addedCmnTreeNode.Parent;
+                    addedCmnTreeNode.SetProperties(e.Label, e.Label.Remove(0, addedCmnTreeNodeParent.Text.Length), -1);     
 
                     addedCmnTreeNode.Remove();
 
