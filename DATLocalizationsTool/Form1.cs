@@ -208,6 +208,10 @@ namespace DATLocalizationsTool
                     MergeNodes(addedCmnTreeNode, subString, treeNode);
                     break;
                 }
+                else if (index != -1 && treeNode.Text.Equals(addedCmnTreeNode.Text))
+                {
+                    addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), addedCmnTreeNode.StringNumber);
+                }
             }
         }
         private void Search()
