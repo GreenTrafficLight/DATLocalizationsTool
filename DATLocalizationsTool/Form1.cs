@@ -432,10 +432,6 @@ namespace DATLocalizationsTool
                     // Remove branch if the user remove characters from the parent with the "New" menu item
                     if (_renameOption == false)
                     {
-                        // Remove cmnTreeNode from the parent childrens
-                        CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)e.Node.Parent;
-                        cmnTreeNodeParent.childrens.RemoveAt(cmnTreeNodeParent.childrens.Count - 1);
-
                         // Remove node from treeView
                         e.Node.Remove();
                     }
@@ -445,6 +441,13 @@ namespace DATLocalizationsTool
                     e.CancelEdit = true;
                     MessageBox.Show(string.Format("Invalid tree node label.\nThe label should not be the same as the parent branch name \"{0}\".", addedCmnTreeNode.Parent.Text),
                         "Node Label Edit");
+
+                    // Remove branch if the user remove characters from the parent with the "New" menu item
+                    if (_renameOption == false)
+                    {
+                        // Remove node from treeView
+                        e.Node.Remove();
+                    }
                 }
                 else
                 {
@@ -483,10 +486,6 @@ namespace DATLocalizationsTool
                     MessageBox.Show("Invalid tree node label.\nThe label cannot be blank.",
                        "Node Label Edit");
 
-                    // Remove cmnTreeNode from the parent childrens
-                    CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)e.Node.Parent;
-                    cmnTreeNodeParent.childrens.RemoveAt(cmnTreeNodeParent.childrens.Count - 1);
-
                     // Remove node from treeView
                     e.Node.Remove();
 
@@ -507,7 +506,16 @@ namespace DATLocalizationsTool
                     using (SearchForm searchForm = new SearchForm())
                     {
                         if (searchForm.ShowDialog() == DialogResult.OK)
-                            StringGridEditor.SearchTreeView(searchForm.SearchString, treeView1.Nodes);
+                        {
+                            foreach (TreeNode node in treeView1.Nodes)
+                            {
+                                if (StringGridEditor.SearchTreeView(searchForm.SearchString, treeView1.SelectedNode))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                            
                     }
                 }
             }
@@ -562,32 +570,18 @@ namespace DATLocalizationsTool
 
                     if (treeView1.SelectedNode is CMN.CmnTreeNode)
                     {
-                        if (cmnTreeNode.Nodes.Count > 0)
-                        {
-                            MessageBox.Show("Cannot rename node because of subranches", "Node Rename");
-                        }
-                        else
-                        {
-                            treeView1.LabelEdit = true;
-                            treeView1.SelectedNode.BeginEdit();
-                        }
+                        treeView1.LabelEdit = true;
+                        treeView1.SelectedNode.BeginEdit();
                     }
                     break;
                 case "Delete":
                     cmnTreeNode = (CMN.CmnTreeNode)treeView1.SelectedNode;
                     if (treeView1.SelectedNode is CMN.CmnTreeNode)
                     {
-                        if (cmnTreeNode.Nodes.Count > 0)
+                        var result = MessageBox.Show("Do you want to delete this branch ?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
+                        if (result == DialogResult.Yes)
                         {
-                            MessageBox.Show("Cannot delete node because of subranches", "Node Delete");
-                        }
-                        else
-                        {
-                            var result = MessageBox.Show("Do you want to delete this branch ?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
-                            if (result == DialogResult.Yes)
-                            {
 
-                            }
                         }
                     }
                     break;

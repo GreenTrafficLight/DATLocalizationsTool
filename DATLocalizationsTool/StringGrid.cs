@@ -128,21 +128,24 @@ namespace DATLocalizationsTool
             }
         }
 
-        public void SearchTreeView(string searchString, TreeNodeCollection nodes)
+        public bool SearchTreeView(string searchString, TreeNode node)
         {
-            foreach (TreeNode node in nodes)
+            if (node.Text.ToLower().Contains(searchString.ToLower()))
             {
-                if (node.Text.ToLower().Contains(searchString.ToLower()))
-                {
-                    treeView1.SelectedNode = node;
-                    break;
-                }
+                treeView1.SelectedNode = node;
+                return true;
+            }
 
-                if (node.Nodes.Count > 0)
+            // Traverse child nodes recursively
+            foreach (TreeNode childNode in node.Nodes)
+            {
+                if (SearchTreeView(searchString, childNode))
                 {
-                    SearchTreeView(searchString, node.Nodes);
+                    return true;
                 }
             }
+
+            return false;
         }
 
         #region dataGridView
