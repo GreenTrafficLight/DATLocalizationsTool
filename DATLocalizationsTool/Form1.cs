@@ -150,7 +150,7 @@ namespace DATLocalizationsTool
             int sortIndex = 0;
 
             // Find the correct position to insert the new node
-            while (sortIndex < treeNodeParent.Nodes.Count && string.Compare(treeNode.Text, treeNodeParent.Nodes[sortIndex].Text) > 0)
+            while (sortIndex < treeNodeParent.Nodes.Count && string.Compare(treeNode.Text, treeNodeParent.Nodes[sortIndex].Text, StringComparison.Ordinal) > 0)
             {
                 sortIndex++;
             }
@@ -183,18 +183,21 @@ namespace DATLocalizationsTool
                     addedCmnTreeNodeParent.childrens.Remove(addedCmnTreeNode);
                     if (!subString.Equals(treeNode.Text))
                     {
+                        // Make a new node for merged one
                         CMN.CmnTreeNode mergedCmnTreeNode = new CMN.CmnTreeNode();
                         mergedCmnTreeNode.SetProperties(subString, subString.Remove(0, addedCmnTreeNodeParent.Text.Length), -1);
-                        addedCmnTreeNodeParent.Nodes.Add(mergedCmnTreeNode);
-                        addedCmnTreeNodeParent.childrens.Add(mergedCmnTreeNode);
+                        addTreeNodeBySorted(mergedCmnTreeNode, addedCmnTreeNodeParent);
                         
+                        // Remove the old node that contains the substring
                         addedCmnTreeNodeParent.Nodes.Remove(treeNode);
                         addedCmnTreeNodeParent.childrens.Remove(treeNode);
                         
+                        // Modify the old node and add it to the merged one
                         treeNode.SetProperties(treeNode.Text, treeNode.Text.Remove(0, mergedCmnTreeNode.Text.Length), treeNode.StringNumber);
                         mergedCmnTreeNode.Nodes.Add(treeNode);
                         mergedCmnTreeNode.childrens.Add(treeNode);
 
+                        // Modifiy the new node and add it to the merged one
                         addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, mergedCmnTreeNode.Text.Length), addedCmnTreeNode.StringNumber);
                         if (!addedCmnTreeNode.Text.Equals(mergedCmnTreeNode.Text))
                             addTreeNodeBySorted(addedCmnTreeNode, mergedCmnTreeNode);                        
@@ -403,8 +406,6 @@ namespace DATLocalizationsTool
                     MenuItem deleteMenuItem = new MenuItem("Delete");
                     deleteMenuItem.Click += new EventHandler(MenuItem_Click);
                     deleteMenuItem.Name = "Delete";
-                    if (cmnTreeNode.Nodes.Count > 0)
-                        deleteMenuItem.Enabled = false;
                     contextMenu.MenuItems.Add(deleteMenuItem);
 
                     MenuItem exitMenuItem = new MenuItem("Exit");
@@ -581,7 +582,17 @@ namespace DATLocalizationsTool
                         var result = MessageBox.Show("Do you want to delete this branch ?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
                         if (result == DialogResult.Yes)
                         {
+                            if (cmnTreeNode.Nodes.Count > 0)
+                            {
+                                cmnTreeNode.childrens.Clear();
 
+                                cmnTreeNode.Nodes.Clear();
+                            }
+
+                            CMN.CmnTreeNode cmnTreeNodeParent = (CMN.CmnTreeNode)cmnTreeNode.Parent;
+                            cmnTreeNodeParent.childrens.RemoveAt(cmnTreeNode.Index);
+
+                            cmnTreeNodeParent.Nodes.RemoveAt(cmnTreeNode.Index);
                         }
                     }
                     break;

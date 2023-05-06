@@ -195,17 +195,15 @@ namespace DATLocalizationsTool
         {
             if (cmnTreeNode.StringNumber != -1)
             {
-                string text = Dats[comboBox1.SelectedIndex].Item1.Strings[cmnTreeNode.StringNumber];
-                dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
-                /*if (Dats[comboBox1.SelectedIndex].Item1.Strings.Count > cmnTreeNode.StringNumber)
+                if (Dats[comboBox1.SelectedIndex].Item1.Strings.Count > cmnTreeNode.StringNumber)
                 {
                     string text = Dats[comboBox1.SelectedIndex].Item1.Strings[cmnTreeNode.StringNumber];
                     dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
                 }
                 else
                 {
-                    dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, null);
-                }*/
+                    dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, '\0');
+                }
 
             }
 

@@ -49,7 +49,7 @@ namespace DATLocalizationsTool.Formats
         }
 
         public CmnTreeNode Root = new CmnTreeNode();
-        
+
         public void Read(string filepath)
         {
             byte[] data = File.ReadAllBytes(filepath);
