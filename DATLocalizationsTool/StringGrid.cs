@@ -80,15 +80,29 @@ namespace DATLocalizationsTool
             {
                 // Add to comboBox if it isn't loaded
                 comboBox1.Items.Add(fileName);
-                Dats.Add(new Tuple<DAT, string>(dat, fileName));
+                Tuple<DAT, string> datComboBox = new Tuple<DAT, string>(dat, fileName);
+                Dats.Add(datComboBox);
+                index = Dats.IndexOf(datComboBox);
             }
             else
             {
                 // Replace the .dat loaded in the comboBox
                 comboBox1.Items[index] = fileName;
-                Dats[index] = new Tuple<DAT, string>(dat, fileName);
+                Tuple<DAT, string> datComboBox = new Tuple<DAT, string>(dat, fileName);
+                Dats[index] = datComboBox;
             }
+
+            if (Cmn != null)
+            {
+                foreach (CMN.CmnTreeNode child in Cmn.Root.childrens)
+                {
+                    AddCmnTreeNodeToCMN(child, index);
+                }
+            }
+
             comboBox1.SelectedIndex = Dats.FindIndex(d => d.Item2 == fileName);
+
+
         }
 
         public void LoadCmn(string filepath)
@@ -180,8 +194,9 @@ namespace DATLocalizationsTool
                 }
                 dataGridView1.AutoResizeRows();
             }
+            
             // Load strings according to Cmn.dat
-            else if (comboBox1.SelectedIndex != -1)
+            else if (comboBox1.SelectedIndex != -1 && Cmn != null)
             {
                 if (treeView1.SelectedNode is CMN.CmnTreeNode cmnTreeNode)
                 {
@@ -191,20 +206,29 @@ namespace DATLocalizationsTool
             }
         }
 
+        // Add the strings in the CMN from the Root
+        public void AddCmnTreeNodeToCMN(CMN.CmnTreeNode cmnTreeNode, int datIndex)
+        {
+            if (cmnTreeNode.StringNumber != -1)
+            {
+                // If the string in the CMN isn't in the DAT, add it
+                if (Dats[datIndex].Item1.Strings.Count <= cmnTreeNode.StringNumber)
+                {
+                    Dats[datIndex].Item1.Strings.Add("\0");
+                }
+            }
+
+            foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
+                AddCmnTreeNodeToCMN(children, datIndex);
+        }
+
+        // Add the strings in the StringGrid from the selected TreeNode
         public void AddCmnTreeNodeToDataGridView(CMN.CmnTreeNode cmnTreeNode)
         {
             if (cmnTreeNode.StringNumber != -1)
             {
-                if (Dats[comboBox1.SelectedIndex].Item1.Strings.Count > cmnTreeNode.StringNumber)
-                {
-                    string text = Dats[comboBox1.SelectedIndex].Item1.Strings[cmnTreeNode.StringNumber];
-                    dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
-                }
-                else
-                {
-                    dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, '\0');
-                }
-
+                string text = Dats[comboBox1.SelectedIndex].Item1.Strings[cmnTreeNode.StringNumber];
+                dataGridView1.Rows.Add(cmnTreeNode.StringNumber, cmnTreeNode.Text, text);
             }
 
             foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)

@@ -86,46 +86,19 @@ namespace DATLocalizationsTool
         
         private void StringModifications(object value, int RowIndex, int ColumnIndex, int stringNumber)
         {
-            switch (value)
+            if (value != null) // Modify existing string
             {
-                case null: // Add new string
-                    using (var textForm = new TextForm("", RowIndex, ColumnIndex))
+                string cellText = dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value.ToString();
+
+                stringNumber = Convert.ToInt32(dataGridView1.Rows[RowIndex].Cells[0].Value);
+                using (var textForm = new TextForm(cellText, RowIndex, ColumnIndex))
+                {
+                    if (textForm.ShowDialog() == DialogResult.Cancel)
                     {
-                        if (textForm.ShowDialog() == DialogResult.Cancel)
-                        {
-                            if (textForm.DatText != "")
-                            {
-                                if (dataGridView1.Rows[RowIndex].Cells[1].Value != null)
-                                    dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value = textForm.DatText + "\0";
-                                else
-                                    dataGridView1.Rows.Add(stringNumber, null, textForm.DatText + "\0");
-
-                                StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add(textForm.DatText + "\0");
-
-                                // Add string to other Dats
-                                for (int i = 0; i < comboBox1.Items.Count; i++)
-                                {
-                                    if (i != comboBox1.SelectedIndex)
-                                        StringGridEditor.Dats[i].Item1.Strings.Add("");
-                                }
-                            }
-                        }
+                        dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value = textForm.DatText + "\0";
+                        StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings[stringNumber] = textForm.DatText + "\0";
                     }
-                    break;
-
-                default: // Modify existing string
-                    string cellText = dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value.ToString();
-
-                    stringNumber = Convert.ToInt32(dataGridView1.Rows[RowIndex].Cells[0].Value);
-                    using (var textForm = new TextForm(cellText, RowIndex, ColumnIndex))
-                    {
-                        if (textForm.ShowDialog() == DialogResult.Cancel)
-                        {
-                            dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value = textForm.DatText + "\0";
-                            StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings[stringNumber] = textForm.DatText + "\0";
-                        }
-                    }
-                    break;
+                }
             }
         }
         
@@ -204,7 +177,7 @@ namespace DATLocalizationsTool
                     }
                     else
                     {
-                        addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), addedCmnTreeNode.StringNumber);
+                        addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), StringGridEditor.Cmn.stringsCount + 1);
                         addTreeNodeBySorted(addedCmnTreeNode, treeNode);
                     }
                     
@@ -213,10 +186,11 @@ namespace DATLocalizationsTool
                 }
                 else if (index != -1 && treeNode.Text.Equals(addedCmnTreeNode.Text))
                 {
-                    addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), addedCmnTreeNode.StringNumber);
+                    addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), StringGridEditor.Cmn.stringsCount + 1);
                 }
             }
         }
+        
         private void Search()
         {
             using (SearchForm searchForm = new SearchForm())
@@ -261,9 +235,9 @@ namespace DATLocalizationsTool
 
                 switch (dataGridView1.CurrentCell.ColumnIndex)
                 {
-                    case 1: // Add new ID
+                    /*case 1: // Add new ID
                         IDModications(e.RowIndex, stringNumber);
-                        break;
+                        break;*/
                     case 2: // String Modifications
                         StringModifications(dataGridView1.Rows[e.RowIndex].Cells[2].Value, e.RowIndex, e.ColumnIndex, stringNumber);
                         break;
@@ -311,14 +285,6 @@ namespace DATLocalizationsTool
                 {
                     case 0:
                         TextRenderer.DrawText(e.Graphics, "N/A", e.CellStyle.Font, e.CellBounds, SystemColors.GrayText, TextFormatFlags.Left);
-                        break;
-
-                    case 1:
-                        TextRenderer.DrawText(e.Graphics, "Select ID ( double click )", e.CellStyle.Font, e.CellBounds, SystemColors.GrayText, TextFormatFlags.Left);
-                        break;
-
-                    case 2:
-                        TextRenderer.DrawText(e.Graphics, "Enter text", e.CellStyle.Font, e.CellBounds, SystemColors.GrayText, TextFormatFlags.Left);
                         break;
 
                     default:
@@ -466,6 +432,11 @@ namespace DATLocalizationsTool
 
                     MergeNodes(addedCmnTreeNode, addedCmnTreeNode.Parent.Text, (CMN.CmnTreeNode)addedCmnTreeNode.Parent);
 
+                    if (comboBox1.SelectedIndex != -1) {
+                        StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add("\0");
+                    }
+                    
+
                     // Refresh DataGridView with updated cmnTreeNode name
                     StringGridEditor.AddToDataGridView();
                 }
@@ -582,10 +553,13 @@ namespace DATLocalizationsTool
                         var result = MessageBox.Show("Do you want to delete this branch ?", "Node Delete Confirmation", MessageBoxButtons.YesNo);
                         if (result == DialogResult.Yes)
                         {
+                            // Remove the childrens before removing the parent
                             if (cmnTreeNode.Nodes.Count > 0)
                             {
+                                // Remove in the CMN
                                 cmnTreeNode.childrens.Clear();
 
+                                // Remove in the TreeView
                                 cmnTreeNode.Nodes.Clear();
                             }
 

@@ -49,6 +49,7 @@ namespace DATLocalizationsTool.Formats
         }
 
         public CmnTreeNode Root = new CmnTreeNode();
+        public int stringsCount = 0;
 
         public void Read(string filepath)
         {
@@ -78,22 +79,19 @@ namespace DATLocalizationsTool.Formats
 
             File.WriteAllBytes(filepath, data);
         }
-
-        public void CheckStringsToCompress()
-        {
-
-        }
-
         private CmnTreeNode ReadVariables(DATBinaryReader br, CmnTreeNode parent)
         {
 
             int count = br.ReadInt();
             for (int i = 0; i < count; i++)
             {
-                
                 int nameLength = br.ReadInt();
                 string name = br.ReadString(nameLength);
                 int stringNumber = br.ReadInt();
+                if (stringsCount < stringNumber)
+                {
+                    stringsCount = stringNumber;
+                }
                 CmnTreeNode node = new CmnTreeNode();
                 node.SetProperties(parent.Text + name, name, stringNumber);
 
