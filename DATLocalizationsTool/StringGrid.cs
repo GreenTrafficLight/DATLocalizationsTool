@@ -94,10 +94,13 @@ namespace DATLocalizationsTool
 
             if (Cmn != null)
             {
+                int toAdd = 0;
                 foreach (CMN.CmnTreeNode child in Cmn.Root.childrens)
                 {
-                    AddCmnTreeNodeToCMN(child, index);
+                    AddCmnTreeNodeToCMN(child, index, ref toAdd);
                 }
+
+                Dats[index].Item1.Strings.AddRange(Enumerable.Repeat("\0", toAdd));
             }
 
             comboBox1.SelectedIndex = Dats.FindIndex(d => d.Item2 == fileName);
@@ -207,19 +210,20 @@ namespace DATLocalizationsTool
         }
 
         // Add the strings in the CMN from the Root
-        public void AddCmnTreeNodeToCMN(CMN.CmnTreeNode cmnTreeNode, int datIndex)
+        public void AddCmnTreeNodeToCMN(CMN.CmnTreeNode cmnTreeNode, int datIndex, ref int toAdd)
         {
             if (cmnTreeNode.StringNumber != -1)
             {
                 // If the string in the CMN isn't in the DAT, add it
                 if (Dats[datIndex].Item1.Strings.Count <= cmnTreeNode.StringNumber)
                 {
-                    Dats[datIndex].Item1.Strings.Add("\0");
+                    toAdd++;
+                    //Dats[datIndex].Item1.Strings.Add("\0");
                 }
             }
 
             foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
-                AddCmnTreeNodeToCMN(children, datIndex);
+                AddCmnTreeNodeToCMN(children, datIndex, ref toAdd);
         }
 
         // Add the strings in the StringGrid from the selected TreeNode

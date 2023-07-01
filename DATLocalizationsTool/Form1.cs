@@ -377,11 +377,11 @@ namespace DATLocalizationsTool
 
                     MergeNodes(addedCmnTreeNode, addedCmnTreeNode.Parent.Text, (CMN.CmnTreeNode)addedCmnTreeNode.Parent);
 
+                    StringGridEditor.Cmn.stringsCount++;
                     if (comboBox1.SelectedIndex != -1) {
                         StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add("\0");
                     }
                     
-
                     // Refresh DataGridView with updated cmnTreeNode name
                     StringGridEditor.AddToDataGridView();
                 }
