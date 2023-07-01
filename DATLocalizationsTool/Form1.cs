@@ -32,58 +32,6 @@ namespace DATLocalizationsTool
             StringGridEditor = new StringGrid(dataGridView1, treeView1, comboBox1);
         }
 
-        private void IDModications(int RowIndex, int stringNumber)
-        {
-            using (CmnTreeViewForm cmnTreeView = new CmnTreeViewForm(StringGridEditor.Cmn))
-            {
-                if (cmnTreeView.ShowDialog() == DialogResult.OK)
-                {
-                    var returnNode = treeView1.Nodes.Find(cmnTreeView.choosenNode, true);
-                    if (returnNode.Length == 1)
-                    {
-                        CMN.CmnTreeNode cmnNode = (CMN.CmnTreeNode)returnNode[0];
-                        // If text and string number has been assigned
-                        if (dataGridView1.Rows[RowIndex].Cells[2].Value != null)
-                        {
-                            // Refresh to current string number value
-                            stringNumber = Convert.ToInt32(dataGridView1.Rows[RowIndex].Cells[0].Value);
-                            dataGridView1.Rows[RowIndex].Cells[0].Value = stringNumber.ToString();
-
-                            dataGridView1.Rows[RowIndex].Cells[1].Value = cmnNode.Text;
-                        }
-                        // If text and string number has not been assigned
-                        else if (dataGridView1.Rows[RowIndex].Cells[0].Value == null && dataGridView1.Rows[RowIndex].Cells[2].Value == null)
-                        {
-                            StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add("\0");
-                            dataGridView1.Rows.Add(stringNumber, cmnNode.Text, "\0");
-                        }
-                        // If text has not been assigned and string number has been assigned
-                        else
-                        {
-                            dataGridView1.Rows[RowIndex].Cells[1].Value = cmnNode.Text;
-                        }
-
-                        cmnNode.StringNumber = stringNumber;
-                    }
-                    else
-                    {
-                        // Modifying ID value that has been assigned to N/A
-                        if (dataGridView1.Rows[RowIndex].Cells[1].Value != null)
-                        {
-                            returnNode = treeView1.Nodes.Find(dataGridView1.Rows[RowIndex].Cells[1].Value.ToString(), true);
-                            if (returnNode.Length == 1)
-                            {
-                                CMN.CmnTreeNode cmnNode = (CMN.CmnTreeNode)returnNode[0];
-                                cmnNode.StringNumber = -1;
-                                dataGridView1.Rows[RowIndex].Cells[1].Value = null;
-                            }
-                        }
-                    }
-
-                }
-            }
-        }
-        
         private void StringModifications(object value, int RowIndex, int ColumnIndex, int stringNumber)
         {
             if (value != null) // Modify existing string
@@ -235,9 +183,6 @@ namespace DATLocalizationsTool
 
                 switch (dataGridView1.CurrentCell.ColumnIndex)
                 {
-                    /*case 1: // Add new ID
-                        IDModications(e.RowIndex, stringNumber);
-                        break;*/
                     case 2: // String Modifications
                         StringModifications(dataGridView1.Rows[e.RowIndex].Cells[2].Value, e.RowIndex, e.ColumnIndex, stringNumber);
                         break;
