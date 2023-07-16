@@ -32,13 +32,19 @@ namespace DATLocalizationsTool
             StringGridEditor = new StringGrid(dataGridView1, treeView1, comboBox1);
         }
 
-        private void StringModifications(object value, int RowIndex, int ColumnIndex, int stringNumber)
+        /// <summary>
+        /// Modify a string in the Form
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="RowIndex"></param>
+        /// <param name="ColumnIndex"></param>
+        private void StringModifications(object value, int RowIndex, int ColumnIndex)
         {
             if (value != null) // Modify existing string
             {
                 string cellText = dataGridView1.Rows[RowIndex].Cells[ColumnIndex].Value.ToString();
 
-                stringNumber = Convert.ToInt32(dataGridView1.Rows[RowIndex].Cells[0].Value);
+                int stringNumber = Convert.ToInt32(dataGridView1.Rows[RowIndex].Cells[0].Value);
                 using (var textForm = new TextForm(cellText, RowIndex, ColumnIndex))
                 {
                     if (textForm.ShowDialog() == DialogResult.Cancel)
@@ -49,8 +55,14 @@ namespace DATLocalizationsTool
                 }
             }
         }
-        
-        // Helper function to get the index of the common substring between two strings
+
+        /// <summary>
+        /// Helper function to get the index of the common substring between two strings
+        /// </summary>
+        /// <param name="str1"></param>
+        /// <param name="str2"></param>
+        /// <param name="startIndex"></param>
+        /// <returns></returns>
         private int GetCommonSubstringIndex(string str1, string str2, int startIndex = 0)
         {
             int index = -1;
@@ -104,7 +116,7 @@ namespace DATLocalizationsTool
                     addedCmnTreeNodeParent.childrens.Remove(addedCmnTreeNode);
                     if (!subString.Equals(treeNode.Text))
                     {
-                        // Make a new node for merged one
+                        // Make a new node for the merged one
                         CMN.CmnTreeNode mergedCmnTreeNode = new CMN.CmnTreeNode();
                         mergedCmnTreeNode.SetProperties(subString, subString.Remove(0, addedCmnTreeNodeParent.Text.Length), -1);
                         addTreeNodeBySorted(mergedCmnTreeNode, addedCmnTreeNodeParent);
@@ -113,28 +125,31 @@ namespace DATLocalizationsTool
                         addedCmnTreeNodeParent.Nodes.Remove(treeNode);
                         addedCmnTreeNodeParent.childrens.Remove(treeNode);
                         
-                        // Modify the old node and add it to the merged one
+                        // Modify the old node by removing the substring and add it to the merged one
                         treeNode.SetProperties(treeNode.Text, treeNode.Text.Remove(0, mergedCmnTreeNode.Text.Length), treeNode.StringNumber);
                         mergedCmnTreeNode.Nodes.Add(treeNode);
                         mergedCmnTreeNode.childrens.Add(treeNode);
 
-                        // Modifiy the new node and add it to the merged one
+                        // Modifiy the new node by removing the substring and add it to the merged one
                         addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, mergedCmnTreeNode.Text.Length), addedCmnTreeNode.StringNumber);
                         if (!addedCmnTreeNode.Text.Equals(mergedCmnTreeNode.Text))
                             addTreeNodeBySorted(addedCmnTreeNode, mergedCmnTreeNode);                        
                     }
                     else
                     {
-                        addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), StringGridEditor.Cmn.stringsCount + 1);
+                        // Add the new node to the parent
+                        addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), StringGridEditor.Cmn.stringsCount);
+                        // Sort the nodes by alphabetical order
                         addTreeNodeBySorted(addedCmnTreeNode, treeNode);
                     }
                     
                     MergeNodes(addedCmnTreeNode, subString, treeNode);
                     break;
                 }
+                // There isn't any merging to do so add the new node
                 else if (index != -1 && treeNode.Text.Equals(addedCmnTreeNode.Text))
                 {
-                    addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), StringGridEditor.Cmn.stringsCount + 1);
+                    addedCmnTreeNode.SetProperties(addedCmnTreeNode.Text, addedCmnTreeNode.Text.Remove(0, addedCmnTreeNodeParent.Text.Length), StringGridEditor.Cmn.stringsCount);
                 }
             }
         }
@@ -179,12 +194,10 @@ namespace DATLocalizationsTool
 
             if (comboBox1.SelectedIndex != -1)
             {
-                int stringNumber = StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Count;
-
                 switch (dataGridView1.CurrentCell.ColumnIndex)
                 {
                     case 2: // String Modifications
-                        StringModifications(dataGridView1.Rows[e.RowIndex].Cells[2].Value, e.RowIndex, e.ColumnIndex, stringNumber);
+                        StringModifications(dataGridView1.Rows[e.RowIndex].Cells[2].Value, e.RowIndex, e.ColumnIndex);
                         break;
                     default:
                         break;
@@ -303,8 +316,8 @@ namespace DATLocalizationsTool
                     MenuItem newMenuItem = new MenuItem("New");
                     newMenuItem.Click += new EventHandler(MenuItem_Click);
                     newMenuItem.Name = "New";
-                    if (cmnTreeNode.StringNumber != -1)
-                        newMenuItem.Enabled = false;
+                    //if (cmnTreeNode.StringNumber != -1)
+                        //newMenuItem.Enabled = false;
                     contextMenu.MenuItems.Add(newMenuItem);
 
                     MenuItem renameMenuItem = new MenuItem("Rename");
@@ -378,8 +391,8 @@ namespace DATLocalizationsTool
                     MergeNodes(addedCmnTreeNode, addedCmnTreeNode.Parent.Text, (CMN.CmnTreeNode)addedCmnTreeNode.Parent);
 
                     StringGridEditor.Cmn.stringsCount++;
-                    if (comboBox1.SelectedIndex != -1) {
-                        StringGridEditor.Dats[comboBox1.SelectedIndex].Item1.Strings.Add("\0");
+                    for (int i = 0; i < comboBox1.Items.Count; i++) {
+                        StringGridEditor.Dats[i].Item1.Strings.Add("\0");
                     }
                     
                     // Refresh DataGridView with updated cmnTreeNode name

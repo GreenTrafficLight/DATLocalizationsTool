@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using ICSharpCode.SharpZipLib.Zip.Compression;
-
 using DATLocalizationsTool.Commons;
 
 namespace DATLocalizationsTool.Formats
@@ -18,8 +16,14 @@ namespace DATLocalizationsTool.Formats
         public DAT()
         {
             Strings = new List<string>();
-
         }
+
+        /// <summary>
+        /// Crypt and decrypt a DAT file
+        /// </summary>
+        /// <param name="data">The data of the DAT file</param>
+        /// <param name="size">The size of the DAT file + the letter converted to int subtracted by 65( except for CMN )</param>
+        /// <returns></returns>
         public static byte[] Crypt(byte[] data, uint size)
         {
             uint ebx = 0;
@@ -48,7 +52,11 @@ namespace DATLocalizationsTool.Formats
 
             return data;
         }
-    
+        
+        /// <summary>
+        /// Read the DAT file
+        /// </summary>
+        /// <param name="filepath">The path of the DAT file</param>
         public void Read(string filepath)
         {
             byte[] data = File.ReadAllBytes(filepath);
@@ -62,6 +70,10 @@ namespace DATLocalizationsTool.Formats
             ReadStrings(br);
         }
 
+        /// <summary>
+        /// Write a DAT file
+        /// </summary>
+        /// <param name="filepath">The path of the new DAT file</param>
         public void Write(string filepath)
         {
             DATBinaryWriter bw = new DATBinaryWriter();
@@ -76,7 +88,11 @@ namespace DATLocalizationsTool.Formats
 
             File.WriteAllBytes(filepath, data);
         }
-      
+        
+        /// <summary>
+        /// Read the strings contained in a DAT file
+        /// </summary>
+        /// <param name="reader"></param>
         private void ReadStrings(DATBinaryReader reader)
         {
             while (reader.Position < reader.Length)
@@ -86,6 +102,10 @@ namespace DATLocalizationsTool.Formats
                 
         }
 
+        /// <summary>
+        /// Write strings in a new DAT file
+        /// </summary>
+        /// <param name="writer"></param>
         private void WriteStrings(DATBinaryWriter writer)
         {
             foreach (string s in Strings)

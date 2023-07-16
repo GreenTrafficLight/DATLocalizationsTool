@@ -34,10 +34,16 @@ namespace DATLocalizationsTool
 
             LoadDataGridView();
         }
+
+        /// <summary>
+        /// Load a DAT or CMN file
+        /// </summary>
+        /// <param name="filepath">The path of the DAT or CMN file</param>
         public void LoadFile(string filepath)
         {
             try
             {
+                // Check if the filename of the DAT is a valid one
                 if (_validStrings.Contains(Path.GetFileNameWithoutExtension(filepath)))
                 {
                     _filePath = Path.GetDirectoryName(filepath);
@@ -67,6 +73,10 @@ namespace DATLocalizationsTool
             }
         }
 
+        /// <summary>
+        /// Read DAT file
+        /// </summary>
+        /// <param name="filepath">The path of the DAT file</param>
         public void LoadDat(string filepath)
         {
             DAT dat = new DAT();
@@ -94,12 +104,7 @@ namespace DATLocalizationsTool
 
             if (Cmn != null)
             {
-                int toAdd = 0;
-                foreach (CMN.CmnTreeNode child in Cmn.Root.childrens)
-                {
-                    AddCmnTreeNodeToCMN(child, index, ref toAdd);
-                }
-
+                int toAdd = Cmn.stringsCount - Dats[index].Item1.Strings.Count;
                 Dats[index].Item1.Strings.AddRange(Enumerable.Repeat("\0", toAdd));
             }
 
@@ -108,6 +113,10 @@ namespace DATLocalizationsTool
 
         }
 
+        /// <summary>
+        /// Load a CMN file from the filepath
+        /// </summary>
+        /// <param name="filepath">The path of the CMN file</param>
         public void LoadCmn(string filepath)
         {
             if (Cmn == null)
@@ -186,7 +195,7 @@ namespace DATLocalizationsTool
         {
             dataGridView1.Rows.Clear();
 
-            // Load all strings if Cmn isn't loaded
+            // Load all strings if the CMN isn't loaded
             if (comboBox1.SelectedIndex != -1 && Cmn == null)
             {
                 int index = 0;
@@ -209,24 +218,10 @@ namespace DATLocalizationsTool
             }
         }
 
-        // Add the strings in the CMN from the Root
-        public void AddCmnTreeNodeToCMN(CMN.CmnTreeNode cmnTreeNode, int datIndex, ref int toAdd)
-        {
-            if (cmnTreeNode.StringNumber != -1)
-            {
-                // If the string in the CMN isn't in the DAT, add it
-                if (Dats[datIndex].Item1.Strings.Count <= cmnTreeNode.StringNumber)
-                {
-                    toAdd++;
-                    //Dats[datIndex].Item1.Strings.Add("\0");
-                }
-            }
-
-            foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
-                AddCmnTreeNodeToCMN(children, datIndex, ref toAdd);
-        }
-
-        // Add the strings in the StringGrid from the selected TreeNode
+        /// <summary>
+        ///  Add the strings in the StringGrid from the selected TreeNode
+        /// </summary>
+        /// <param name="cmnTreeNode">The selected node in the treeview</param>
         public void AddCmnTreeNodeToDataGridView(CMN.CmnTreeNode cmnTreeNode)
         {
             if (cmnTreeNode.StringNumber != -1)
@@ -238,6 +233,7 @@ namespace DATLocalizationsTool
             foreach (CMN.CmnTreeNode children in cmnTreeNode.childrens)
                 AddCmnTreeNodeToDataGridView(children);
         }
+
 
         public void AddCmnTreeNodeToDataGridView(CMN.CmnTreeNode cmnTreeNode, string searchString)
         {

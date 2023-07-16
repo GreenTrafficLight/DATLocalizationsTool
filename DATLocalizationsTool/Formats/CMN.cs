@@ -36,6 +36,12 @@ namespace DATLocalizationsTool.Formats
                 return obj;
             }
 
+            /// <summary>
+            /// Set the property of a CMN node
+            /// </summary>
+            /// <param name="nodeText">The text of the node in the Treeview</param>
+            /// <param name="name">The name of the CMN node in the data ( with the substring removed from its parent )</param>
+            /// <param name="stringNumber">The number of the string attached to this CMN node</param>
             public void SetProperties(string nodeText, string name, int stringNumber)
             {
                 // Node properties
@@ -51,6 +57,11 @@ namespace DATLocalizationsTool.Formats
         public CmnTreeNode Root = new CmnTreeNode();
         public int stringsCount = 0;
 
+
+        /// <summary>
+        /// Read CMN data
+        /// </summary>
+        /// <param name="filepath">The path of the CMN file</param>
         public void Read(string filepath)
         {
             byte[] data = File.ReadAllBytes(filepath);
@@ -61,8 +72,14 @@ namespace DATLocalizationsTool.Formats
             DATBinaryReader br = new DATBinaryReader(data);
 
             Root = ReadVariables(br, Root);
+
+            stringsCount++; // Because we get the string number ( which is the index ) and its start from zero
         }
         
+        /// <summary>
+        /// Write CMN date
+        /// </summary>
+        /// <param name="filepath">The path of the new CMN file</param>
         public void Write(string filepath)
         {
             DATBinaryWriter bw = new DATBinaryWriter();
@@ -79,6 +96,13 @@ namespace DATLocalizationsTool.Formats
 
             File.WriteAllBytes(filepath, data);
         }
+
+        /// <summary>
+        /// Recursive function that read the variables ( aka IDs ) of the CMN data
+        /// </summary>
+        /// <param name="br"></param>
+        /// <param name="parent"></param>
+        /// <returns></returns>
         private CmnTreeNode ReadVariables(DATBinaryReader br, CmnTreeNode parent)
         {
 
@@ -88,6 +112,7 @@ namespace DATLocalizationsTool.Formats
                 int nameLength = br.ReadInt();
                 string name = br.ReadString(nameLength);
                 int stringNumber = br.ReadInt();
+                // Get the maximum the of the strings contained in the CMN
                 if (stringsCount < stringNumber)
                 {
                     stringsCount = stringNumber;
@@ -100,6 +125,11 @@ namespace DATLocalizationsTool.Formats
             return parent;
         }
 
+        /// <summary>
+        /// Recursvie function that write the variables ( aka IDs ) in the new CMN data
+        /// </summary>
+        /// <param name="bw"></param>
+        /// <param name="node"></param>
         private void WriteVariables(DATBinaryWriter bw, CmnTreeNode node)
         {
             //if (node.Text == "Aircraft_Name_a130_test")
