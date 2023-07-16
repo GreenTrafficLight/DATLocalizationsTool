@@ -532,5 +532,10 @@ namespace DATLocalizationsTool
                     break;
             }
         }
-    }
+
+		private void searchToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+            Search();
+		}
+	}
 }
